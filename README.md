@@ -68,22 +68,22 @@ You also have to create a root.view package and a matching template there. So if
       // 8. serve();
 ...
 ```
-1. ``withoutCookies()`` <BR> Will not set any cookies at all. In case you have a static website.
-2. ``sessionAge(60)`` <BR> Defines session age in seconds.
-3. ``gzip()`` <BR> Will gzip the response sent to client.
-4. ``database("jdbc:...", "user", "pass")`` <BR> Will initiate a database pool.
-5. ``production()`` <BR> Will load the clases only once. No hot reloading. It must be uncommented when exporting to final JAR.
-6. ``staticLocation("absolute path")`` <BR> Sets the location of static files.
-7. ``port(8080)`` <BR> Sets the port where to listen.
-8. ``serve()`` <BR> Kicks off everything.
+- ``withoutCookies()`` <BR> Will not set any cookies at all. In case you have a static website.
+- ``sessionAge(60)`` <BR> Defines session age in seconds.
+- ``gzip()`` <BR> Will gzip the response sent to client.
+- ``database("jdbc:...", "user", "pass")`` <BR> Will initiate a database pool.
+- ``production()`` <BR> Will load the clases only once. No hot reloading. It must be uncommented when exporting to final JAR.
+- ``staticLocation("absolute path")`` <BR> Sets the location of static files.
+- ``port(8080)`` <BR> Sets the port where to listen.
+- ``serve()`` <BR> Kicks off everything.
 
 ## Features
-1. Hot reloading
-2. Templating
-3. Sessions
-4. Database
-5. Very simple interface
-6. Lightweight
+- Hot reloading
+- Templating
+- Sessions
+- Database
+- Very simple interface
+- Lightweight
 
 ## Methods
 Method | Function
@@ -255,10 +255,18 @@ I'm
 }}
 ```
 ## Roadmap
-1. WebSocket
-2. Spdy
-3. MQTT
-4. Optimization
+1. Maven
+2. WebSocket
+3. Spdy
+4. MQTT
+5. Some Optimizations
+
+## Dependencies
+- Netty 4.0.31.Final
+- ommons-lang3 3.4
+- HikariCP 2.4.1
+- slf4j-api 1.7.12
+- mysql-connector-java 5.1.36
 
 ## License
 http://www.apache.org/licenses/LICENSE-2.0.txt
