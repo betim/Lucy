@@ -1,4 +1,4 @@
-package org.pring.lucy.server;
+package com.pring.lucy.server;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.pring.lucy.template.TemplateEngine;
+import com.pring.lucy.template.TemplateEngine;
 
 public class HotReload extends ClassLoader implements Runnable {
   public final boolean developmentMode;

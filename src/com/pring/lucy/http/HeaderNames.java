@@ -1,4 +1,4 @@
-package org.pring.lucy.http;
+package com.pring.lucy.http;
 
 public class HeaderNames {
   public static final String ACCEPT = "Accept";

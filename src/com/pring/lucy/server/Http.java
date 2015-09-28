@@ -1,4 +1,4 @@
-package org.pring.lucy.server;
+package com.pring.lucy.server;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CACHE_CONTROL;
 import static io.netty.handler.codec.http.HttpHeaders.Names.DATE;
@@ -16,9 +16,9 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import org.pring.lucy.http.HeaderNames;
-import org.pring.lucy.http.HttpStatus;
-import org.pring.lucy.http.Values;
+import com.pring.lucy.http.HeaderNames;
+import com.pring.lucy.http.HttpStatus;
+import com.pring.lucy.http.Values;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;

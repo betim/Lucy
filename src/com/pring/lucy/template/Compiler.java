@@ -1,4 +1,4 @@
-package org.pring.lucy.template;
+package com.pring.lucy.template;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

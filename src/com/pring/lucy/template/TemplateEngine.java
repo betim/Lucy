@@ -1,4 +1,4 @@
-package org.pring.lucy.template;
+package com.pring.lucy.template;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,7 +8,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.pring.lucy.server.Server;
+
+import com.pring.lucy.server.Server;
 
 public class TemplateEngine {
   private static String imports = 

@@ -1,4 +1,4 @@
-package org.pring.lucy.server;
+package com.pring.lucy.server;
 
 public class HaltException extends Exception {
   private static final long serialVersionUID = 1L;

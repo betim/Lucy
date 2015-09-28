@@ -1,4 +1,4 @@
-package org.pring.lucy.server;
+package com.pring.lucy.server;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaders.Names.IF_MODIFIED_SINCE;
@@ -21,8 +21,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.pring.lucy.http.HeaderNames;
-import org.pring.lucy.http.MimeType;
+import com.pring.lucy.http.HeaderNames;
+import com.pring.lucy.http.MimeType;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;

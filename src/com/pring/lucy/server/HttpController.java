@@ -1,7 +1,7 @@
-package org.pring.lucy.server;
+package com.pring.lucy.server;
 
+import static com.pring.lucy.template.TemplateEngine.getTemplate;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static org.pring.lucy.template.TemplateEngine.getTemplate;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,16 +13,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import com.pring.lucy.annotations.Api;
+import com.pring.lucy.annotations.NoSession;
+import com.pring.lucy.annotations.Status;
+import com.pring.lucy.annotations.View;
+import com.pring.lucy.http.HeaderNames;
+import com.pring.lucy.http.HttpStatus;
+import com.pring.lucy.http.MimeType;
+
 import java.util.Set;
 import java.util.TreeSet;
-
-import org.pring.lucy.annotations.Api;
-import org.pring.lucy.annotations.NoSession;
-import org.pring.lucy.annotations.Status;
-import org.pring.lucy.annotations.View;
-import org.pring.lucy.http.HeaderNames;
-import org.pring.lucy.http.HttpStatus;
-import org.pring.lucy.http.MimeType;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

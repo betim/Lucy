@@ -1,4 +1,4 @@
-package org.pring.lucy.server;
+package com.pring.lucy.server;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

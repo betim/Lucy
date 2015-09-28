@@ -1,4 +1,4 @@
-package org.pring.lucy.http;
+package com.pring.lucy.http;
 
 public class Values {
   public static final String APPLICATION_X_WWW_FORM_URLENCODED =

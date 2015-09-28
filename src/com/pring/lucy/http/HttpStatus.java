@@ -1,4 +1,4 @@
-package org.pring.lucy.http;
+package com.pring.lucy.http;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 

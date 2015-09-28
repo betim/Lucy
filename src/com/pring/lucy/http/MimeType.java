@@ -1,4 +1,4 @@
-package org.pring.lucy.http;
+package com.pring.lucy.http;
 
 import java.io.File;
 import java.util.Properties;

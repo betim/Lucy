@@ -1,4 +1,4 @@
-package org.pring.lucy.annotations;
+package com.pring.lucy.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,6 +7,4 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface View {
-  public String value() default "index";
-}
+public @interface NoSession {}
