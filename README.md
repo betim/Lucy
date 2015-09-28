@@ -176,7 +176,7 @@ public class Index extends HttpController {
 `buyer.view.index`:
 ```html
 <B>
-  {{ myVar; }}
+  {{ $myVar; }}
 </B>
 ```
 Then access it like this:
@@ -277,7 +277,7 @@ https://github.com/betim/Lucy/releases/tag/1.0
 
 --------------------------------------------------------
 
-* Currently works on Unix/Linux.
+* Currently works only on Unix/Linux.
 
 ## License
 Copyright 2015 Lucy

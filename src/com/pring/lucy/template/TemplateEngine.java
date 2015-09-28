@@ -13,13 +13,13 @@ import com.pring.lucy.server.Server;
 
 public class TemplateEngine {
   private static String imports = 
-      "import org.pring.lucy.template.Template;\n"
+      "import com.pring.lucy.template.Template;\n"
       + "import java.util.HashMap;\n"
       + "import java.util.Iterator;\n"
       + "import java.util.Map;\n"
       + "import java.util.Set;\n"
       + "import java.sql.ResultSet;\n"
-      + "import org.pring.lucy.server.SqlDatabase.ResultSetIterator;\n"
+      + "import com.pring.lucy.server.SqlDatabase.ResultSetIterator;\n"
       + "import io.netty.handler.codec.http.cookie.Cookie;\n";
 
   private static Compiler javaCompiler = Compiler.instance();
