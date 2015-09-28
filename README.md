@@ -201,7 +201,7 @@ public class Index extends HttpController {
 
   @Api
   public void update(int id, String name) {
-    DB.update("UPDATE `sellers` SET `name` = ? WHERE `id` = ?", new Object[] { id, name });
+    DB.update("UPDATE `sellers` SET `name` = ? WHERE `id` = ?", new Object[] { name, id });
     redirect("/");
   }
 }
@@ -214,6 +214,7 @@ Or update like this:
 ```
 http://localhost:8080/seller:/update/1/Awesome
 ```
+Arguments are typesafe, so if you try to pass string where int is expected, you'll get an exception if you're under development mode, otherwise it will politely redirect you to /.
 ## Template Engine
 Template engine is pure Java code except for a short hand when writing for loops:
 ```html
@@ -237,6 +238,7 @@ Template engine is pure Java code except for a short hand when writing for loops
 ```
 Database access obviously:
 ```html
+<li>
 {{
   for (String s : ResultSet r : DB.select("select * from COLLATION_CHARACTER_SET_APPLICABILITY;")) {
     <li>$s.getString(1);</li>
