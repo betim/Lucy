@@ -241,8 +241,8 @@ Database access obviously:
 ```html
 <li>
 {{
-  for (String s : ResultSet r : DB.select("select * from COLLATION_CHARACTER_SET_APPLICABILITY;")) {
-    <li>$s.getString(1);</li>
+  for (ResultSet r : DB.select("select * from `sellers`;")) {
+    <li>$r.getString(1);</li>
   }
 }}
 </ul>
@@ -275,7 +275,21 @@ https://github.com/betim/Lucy/releases/tag/1.0
 - slf4j-api 1.7.12
 - mysql-connector-java 5.1.36
 
-- Currently it only works on Linux.
+--------------------------------------------------------
+
+* Currently works on Unix/Linux.
 
 ## License
-http://www.apache.org/licenses/LICENSE-2.0.txt
+Copyright 2015 Lucy
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
