@@ -214,7 +214,8 @@ Or update like this:
 ```
 http://localhost:8080/seller:/update/1/Awesome
 ```
-Arguments are typesafe, so if you try to pass string where int is expected, you'll get an exception if you're under development mode, otherwise it will politely redirect you to /.
+Arguments are typesafe, so if you try to pass a string where int is expected, you'll get an exception if you're under development mode, otherwise it will politely redirect you to /.
+
 ## Template Engine
 Template engine is pure Java code except for a short hand when writing for loops:
 ```html
@@ -273,6 +274,8 @@ https://github.com/betim/Lucy/releases/tag/1.0
 - HikariCP 2.4.1
 - slf4j-api 1.7.12
 - mysql-connector-java 5.1.36
+
+- Currently it only works on Linux.
 
 ## License
 http://www.apache.org/licenses/LICENSE-2.0.txt
