@@ -258,12 +258,12 @@ I'm
 }}
 ```
 ## Roadmap
-[x] Maven
-[ ] WebSocket
-[ ] Spdy
-[ ] MQTT
-[ ] Some Optimizations
-[ ] Writing code on Xtend
+- [ ] Maven
+- [ ] WebSocket
+- [ ] Spdy
+- [ ] MQTT
+- [x] Some Optimizations
+- [ ] Writing code on Xtend
 
 ## Download
 https://github.com/betim/Lucy/releases/tag/1.0
