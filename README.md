@@ -6,7 +6,7 @@ A simple HTTP framework based on Netty for Java.
 - Eclipse
 
 ## Getting Started
-- Define handler class:
+- Define a handler class:
 ```java
 package root.controller;
 
@@ -261,9 +261,12 @@ I'm
 4. MQTT
 5. Some Optimizations
 
+## Download
+https://github.com/betim/Lucy/blob/master/Lucy-1.0.jar
+
 ## Dependencies
 - Netty 4.0.31.Final
-- ommons-lang3 3.4
+- commons-lang3 3.4
 - HikariCP 2.4.1
 - slf4j-api 1.7.12
 - mysql-connector-java 5.1.36
