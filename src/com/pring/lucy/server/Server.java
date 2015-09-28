@@ -4,6 +4,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,7 +64,11 @@ public class Server {
   
   protected static Map<String, Class<? extends HttpController>> controllers = 
       new ConcurrentHashMap<>();
-
+  
+  protected static Map<String, Method> methods = 
+      new ConcurrentHashMap<>();
+  
+  
   public Server port(int p) {
     port = p;
     return this;
@@ -235,8 +240,6 @@ public class Server {
         // .handler(new LoggingHandler(LogLevel.INFO))
         //.channel(EpollServerSocketChannel.class)
         //.childOption(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED)
-        .childOption(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 32 * 1024)
-        .childOption(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 8 * 1024)
         .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
         .childHandler(new ChannelInitializer<SocketChannel>() {
           @Override

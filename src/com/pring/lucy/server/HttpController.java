@@ -71,14 +71,14 @@ public abstract class HttpController {
     ctx = _ctx;
     request = _request;
     isKeepAlive = HttpHeaders.isKeepAlive(request);
-    
+
     if (HttpHeaders.is100ContinueExpected(request)) {
       ctx.write(new DefaultFullHttpResponse(HTTP_1_1, HttpStatus.CONTINUE));
     }
 
     response.headers().add(HeaderNames.CONTENT_TYPE, MimeType.defaultContentType);
-
-    if (request.headers().get(HeaderNames.COOKIE) != null) {
+    
+    if (Server.withCookies && request.headers().get(HeaderNames.COOKIE) != null) {
       for (Cookie cookie : ServerCookieDecoder
           .STRICT.decode(request.headers().get(HeaderNames.COOKIE))) {
         if (cookie.name().equals(Server.sessionName))
@@ -88,116 +88,109 @@ public abstract class HttpController {
       }
     }
     
-    boolean found = false;
-    for (Method m : this.getClass().getMethods()) {
-      if (m.getName().equals(method)) {
-        if (m.getParameterCount() == (params.length - tokOffset)) {
-          if (m.getAnnotation(NoSession.class) == null) {
-            cookie(Server.sessionName, sessionId, Server.sessionAge);
-            
-            session = Session.getSession(sessionId);
-            session.lastUse(System.currentTimeMillis());
-          }
-          view("session", session);
-          view("DB", DB);
-          
-          if (request.headers().contains(HeaderNames.CONTENT_TYPE)
-              && request.headers().get(HeaderNames.CONTENT_TYPE).startsWith("application/x-www-form-urlencoded"))
-            form = new QueryStringDecoder(request.content().toString(CharsetUtil.ISO_8859_1), false).parameters();
-          else if (request.headers().contains(HeaderNames.CONTENT_TYPE)
-              && request.headers().get(HeaderNames.CONTENT_TYPE).startsWith("multipart/form-data")) {
-            HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(Server.DATA_FACTORY, request);
+    Method _method = Server.methods.get(pkg + '.' + method);
+    if (_method != null) {      
+      if (Server.withCookies && _method.getAnnotation(NoSession.class) == null) {
+        cookie(Server.sessionName, sessionId, Server.sessionAge);
+        
+        session = Session.getSession(sessionId);
+        session.lastUse(System.currentTimeMillis());
+      }
+      
+      view("session", session);
+      view("DB", DB);
+      
+      if (request.headers().contains(HeaderNames.CONTENT_TYPE)
+          && request.headers().get(HeaderNames.CONTENT_TYPE).startsWith("application/x-www-form-urlencoded"))
+        form = new QueryStringDecoder(request.content().toString(CharsetUtil.ISO_8859_1), false).parameters();
+      else if (request.headers().contains(HeaderNames.CONTENT_TYPE)
+          && request.headers().get(HeaderNames.CONTENT_TYPE).startsWith("multipart/form-data")) {
+        HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(Server.DATA_FACTORY, request);
 
-            InterfaceHttpData data = decoder.next();
-            if (data != null) {
-              if (data.getHttpDataType() == HttpDataType.Attribute) {
-                Attribute attribute = (Attribute) data;
-                String value = null;
-                try {
-                  value = attribute.getValue();
+        InterfaceHttpData data = decoder.next();
+        if (data != null) {
+          if (data.getHttpDataType() == HttpDataType.Attribute) {
+            Attribute attribute = (Attribute) data;
+            String value = null;
+            try {
+              value = attribute.getValue();
 
-                  if (form.containsKey(attribute.getName())) {
-                    form.get(attribute.getName()).add(value);
-                  } else {
-                    List<String> list = new ArrayList<String>();
-                    list.add(value);
-                    form.put(attribute.getName(), list);
-                  }
+              if (form.containsKey(attribute.getName())) {
+                form.get(attribute.getName()).add(value);
+              } else {
+                List<String> list = new ArrayList<String>();
+                list.add(value);
+                form.put(attribute.getName(), list);
+              }
 
-                } catch (IOException e) {
-                  e.printStackTrace();
-                }
-              } else if (data.getHttpDataType() == HttpDataType.FileUpload) {
-                FileUpload fileUpload = (FileUpload) data;
-                if (fileUpload.isCompleted()) {
-                  try {
-                    files.put(fileUpload.getName(), fileUpload.getFile());
-                  } catch (IOException e) {
-                    e.printStackTrace();
-                  }
-                }
+            } catch (IOException e) {
+              e.printStackTrace();
+            }
+          } else if (data.getHttpDataType() == HttpDataType.FileUpload) {
+            FileUpload fileUpload = (FileUpload) data;
+            if (fileUpload.isCompleted()) {
+              try {
+                files.put(fileUpload.getName(), fileUpload.getFile());
+              } catch (IOException e) {
+                e.printStackTrace();
               }
             }
           }
-          
-          String qp[] = url().split("\\?");
-          if (qp.length == 2)
-            queryParameters = new QueryStringDecoder(qp[1], false).parameters();
-                      
-          if (m.getAnnotation(Status.class) != null) {
-            status(HttpResponseStatus.valueOf(m.getAnnotation(Status.class).code()));
-          }  
-
-          Object[] parameters = new Object[params.length - tokOffset];
-          int idx = 0;
-          for (Type t : m.getGenericParameterTypes()) {
-            if (t.getTypeName().equals("char"))
-              parameters[idx] = params[tokOffset + idx].charAt(0);
-            else if (t.getTypeName().equals("short"))
-              parameters[idx] = Short.parseShort(params[tokOffset + idx]);
-            else if (t.getTypeName().equals("int"))
-              parameters[idx] = Integer.parseInt(params[tokOffset + idx]);
-            else if (t.getTypeName().equals("float"))
-              parameters[idx] = Float.parseFloat(params[tokOffset + idx]);
-            else if (t.getTypeName().equals("double"))
-              parameters[idx] = Double.parseDouble(params[tokOffset + idx]);
-            else
-              parameters[idx] = params[tokOffset + idx];
-
-            idx++;
-          }
-
-          found = true;
-          m.invoke(this, parameters);
-
-          if (halt != null) {
-            throw halt;
-          }
-          
-          if (m.getAnnotation(Api.class) == null) {
-            if (m.getAnnotation(View.class) != null) {
-              if (!m.getAnnotation(View.class).value().equals("")) {
-                String[] elems = pkg.split("\\.");
-                elems[elems.length - 1] = m.getAnnotation(View.class).value();
-
-                echo(getTemplate(String.join(".", elems), templateFields).render(templateFields));
-              }
-            } else {
-              echo(getTemplate(pkg, templateFields).render(templateFields));
-            }
-          } else
-            response.headers().set(HeaderNames.CONTENT_TYPE, m.getAnnotation(Api.class).type());
-          
-          break;
         }
       }
-    }
 
-    if (found) {
-      if (cookies.size() > 0 && Server.withCookies) {
-        ServerCookieEncoder.STRICT.encode(cookies).forEach(cookie -> {
+      if (request.getUri().contains("?")) {
+        String qp[] = request.getUri().split("\\?");
+        queryParameters = new QueryStringDecoder(qp[1], false).parameters();
+      }
+      
+      if (_method.getAnnotation(Status.class) != null) {
+        status(HttpResponseStatus.valueOf(_method.getAnnotation(Status.class).code()));
+      }  
+
+      Object[] parameters = new Object[params.length - tokOffset];
+      int idx = 0;
+      for (Type t : _method.getGenericParameterTypes()) {
+        if (t.getTypeName().equals("char"))
+          parameters[idx] = params[tokOffset + idx].charAt(0);
+        else if (t.getTypeName().equals("short"))
+          parameters[idx] = Short.parseShort(params[tokOffset + idx]);
+        else if (t.getTypeName().equals("int"))
+          parameters[idx] = Integer.parseInt(params[tokOffset + idx]);
+        else if (t.getTypeName().equals("float"))
+          parameters[idx] = Float.parseFloat(params[tokOffset + idx]);
+        else if (t.getTypeName().equals("double"))
+          parameters[idx] = Double.parseDouble(params[tokOffset + idx]);
+        else
+          parameters[idx] = params[tokOffset + idx];
+
+        idx++;
+      }
+
+      _method.invoke(this, parameters);
+
+      if (halt != null) {
+        throw halt;
+      }
+      
+      if (_method.getAnnotation(Api.class) == null) {
+        if (_method.getAnnotation(View.class) != null) {
+          if (!_method.getAnnotation(View.class).value().equals("")) {
+            String[] elems = pkg.split("\\.");
+            elems[elems.length - 1] = _method.getAnnotation(View.class).value();
+
+            echo(getTemplate(String.join(".", elems), templateFields).render(templateFields));
+          }
+        } else {
+          echo(getTemplate(pkg, templateFields).render(templateFields));
+        }
+      } else
+        response.headers().set(HeaderNames.CONTENT_TYPE, _method.getAnnotation(Api.class).type());
+      
+      
+      if (Server.withCookies && cookies.size() > 0) {
+        for (String cookie : ServerCookieEncoder.STRICT.encode(cookies))
           response.headers().add(HeaderNames.SET_COOKIE, cookie);
-        });
       }
       
       if (redirect.length() > 0)

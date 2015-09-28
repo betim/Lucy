@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -71,9 +72,15 @@ public class HotReload extends ClassLoader implements Runnable {
       }
     } else if (f.getName().endsWith(".class")) {
       if (f.getAbsolutePath().matches("(.*)controller(.*)")) {
-        Server.controllers.put(
-            f.getAbsolutePath().toString().split("/../")[1].toLowerCase()
-            .replace('/', '.').replace(".class", ""), loader.findClass(f.getAbsolutePath()));
+        Class<? extends HttpController> cls = loader.findClass(f.getAbsolutePath());
+        String clsPkg = f.getAbsolutePath().toString().split("/../")[1].toLowerCase()
+            .replace('/', '.').replace(".class", "");
+
+        Server.controllers.put(clsPkg, cls);
+        
+        for (Method m : cls.getMethods()) {          
+          Server.methods.put(clsPkg + '.' + m.getName(), m);
+        }
         
         // System.out.printf("Loaded controller: %s\n", f.getName());
       }
@@ -125,12 +132,18 @@ public class HotReload extends ClassLoader implements Runnable {
                             child.toAbsolutePath().toString().split("/../")[1]
                                 .toLowerCase().replace('/', '.').replace(".class", ""), 
                             loader.findClass(child.toAbsolutePath().toString()));
-                      else
-                        Server.controllers.put(
-                            child.toAbsolutePath().toString().split("/../")[1]
-                                .toLowerCase().replace('/', '.').replace(".class", ""), 
-                            loader.findClass(child.toAbsolutePath().toString()));
-
+                      else {
+                        Class<? extends HttpController> cls =
+                            loader.findClass(child.toAbsolutePath().toString());
+                        String clsPkg = child.toAbsolutePath().toString().split("/../")[1]
+                            .toLowerCase().replace('/', '.').replace(".class", "");
+                        
+                        Server.controllers.put(clsPkg, cls);
+                        
+                        for (Method m : cls.getMethods()) {
+                          Server.methods.put(clsPkg + '.' + m.getName(), m);
+                        }
+                      }
                   } else if (child.toString().endsWith(".html")) {
                     /*
                     TemplateEngine.recompileTemplate(
