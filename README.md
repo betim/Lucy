@@ -262,7 +262,7 @@ I'm
 5. Some Optimizations
 
 ## Download
-https://github.com/betim/Lucy/blob/master/Lucy-1.0.jar
+https://github.com/betim/Lucy/releases/tag/1.0
 
 ## Dependencies
 - Netty 4.0.31.Final
