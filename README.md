@@ -89,8 +89,8 @@ You also have to create a root.view package and a matching template there. So if
 Method | Function
 ------------ | -------------
 `redirect(to)` | Redirects to specified URL
-`status(status)` | Sets HTTP status code
-`method()` | Returns HTTP method
+`status(code)` | Sets HTTP status code
+`method()` | Returns request HTTP method
 `halt()` | Halts execution
 `halt(status)` | Halts execution with status code
 `halt(status, message)` | Halts execution with status code and a message
@@ -208,11 +208,11 @@ public class Index extends HttpController {
 ```
 Then access it like this:
 ```
-http://localhost:8080/sller:/
+http://localhost:8080/seller:/
 ```
 Or update like this:
 ```
-http://localhost:8080/sller:/update/1/Awesome
+http://localhost:8080/seller:/update/1/Awesome
 ```
 ## Template Engine
 Template engine is pure Java code except for a short hand when writing for loops:
@@ -260,6 +260,7 @@ I'm
 3. Spdy
 4. MQTT
 5. Some Optimizations
+6. Writing code on Xtend
 
 ## Download
 https://github.com/betim/Lucy/releases/tag/1.0
