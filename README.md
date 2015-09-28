@@ -78,7 +78,7 @@ You also have to create a root.view package and a matching template there. So if
 8. ``serve()`` <BR> Kicks off everything.
 
 ## Features
-1. Hot reloading -- No more restarts 
+1. Hot reloading
 2. Templating
 3. Sessions
 4. Database
@@ -165,7 +165,11 @@ import org.pring.lucy.server.HttpController;
 public class Index extends HttpController {
   @Override
   public void index() throws Exception {
-    echo("TEST");
+    view("myVar", aVeryComplexCalculation());
+  }
+  
+  private static int aVeryComplexCalculation() {
+    return 42;
   }
 }
 ```
@@ -178,6 +182,37 @@ public class Index extends HttpController {
 Then access it like this:
 ```
 http://localhost:8080/buyer:/
+```
+
+`seller.controller.Index`:
+```java
+package seller.controller;
+
+import org.pring.lucy.server.HttpController;
+
+public class Index extends HttpController {
+  @Override
+  @Api
+  public void index() throws Exception {
+    for (ResultSet r : DB.select("select * from `sellers`;")) {
+      echo(r.getString("id") + " => " + r.getString("name") + '\n');
+    }
+  }
+
+  @Api
+  public void update(int id, String name) {
+    DB.update("UPDATE `sellers` SET `name` = ? WHERE `id` = ?", new Object[] { id, name });
+    redirect("/");
+  }
+}
+```
+Then access it like this:
+```
+http://localhost:8080/sller:/
+```
+Or update like this:
+```
+http://localhost:8080/sller:/update/1/Awesome
 ```
 ## Template Engine
 Template engine is pure Java code except for a short hand when writing for loops:
@@ -210,7 +245,7 @@ Database access obviously:
 </ul>
 ```
 Also Session through a `session` variable:
-``
+```
 I'm 
 {{
   if (session.getBoolean("isLoggedIn"))
@@ -218,5 +253,12 @@ I'm
   else
     echo("<i>OUT :(</i>");
 }}
+```
+## Roadmap
+1. WebSocket
+2. Spdy
+3. MQTT
+4. Optimization
+
 ## License
 http://www.apache.org/licenses/LICENSE-2.0.txt
