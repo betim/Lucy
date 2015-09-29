@@ -217,7 +217,7 @@ http://localhost:8080/seller:/update/1/Awesome
 Arguments are typesafe, so if you try to pass a string where int is expected, you'll get an exception if you're under development mode, otherwise it will politely redirect you to /.
 
 ## Template Engine
-Template engine is pure Java code except for a short hand when writing for loops:
+Template engine is pure Java code plus for a short hand when writing for loops:
 ```html
 <ul>
 {{

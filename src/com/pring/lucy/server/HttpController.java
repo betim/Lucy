@@ -77,7 +77,7 @@ public abstract class HttpController {
     }
 
     response.headers().add(HeaderNames.CONTENT_TYPE, MimeType.defaultContentType);
-    
+
     if (Server.withCookies && request.headers().get(HeaderNames.COOKIE) != null) {
       for (Cookie cookie : ServerCookieDecoder
           .STRICT.decode(request.headers().get(HeaderNames.COOKIE))) {
