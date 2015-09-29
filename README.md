@@ -5,6 +5,15 @@ A simple HTTP framework based on Netty for Java.
 - JDK8+
 - Eclipse
 
+## Maven
+```
+<dependency>
+  <groupId>com.pr-ing</groupId>
+  <artifactId>lucy</artifactId>
+  <version>1.0</version>
+</dependency>
+```
+
 ## Getting Started
 - Define a handler class:
 ```java
@@ -258,7 +267,7 @@ I'm
 }}
 ```
 ## Roadmap
-- [ ] Maven
+- [x] Maven
 - [ ] WebSocket
 - [ ] Spdy
 - [ ] MQTT
