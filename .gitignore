@@ -55,6 +55,3 @@ local.properties
 
 # TeXlipse plugin
 .texlipse
-
-# Maven
-settings.xml
