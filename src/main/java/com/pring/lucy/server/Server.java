@@ -21,10 +21,11 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.epoll.EpollChannelOption;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollMode;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
@@ -244,26 +245,23 @@ public class Server {
   public void serve() throws Exception {
     init();
     
-    /*
     EpollEventLoopGroup bossGroup = new EpollEventLoopGroup();
     EpollEventLoopGroup workerGroup = new EpollEventLoopGroup(4);
-     */
     
-    EventLoopGroup bossGroup = new NioEventLoopGroup();
-    EventLoopGroup workerGroup = new NioEventLoopGroup();
+    // EventLoopGroup bossGroup = new NioEventLoopGroup();
+    // EventLoopGroup workerGroup = new NioEventLoopGroup();
     
     try {
       ServerBootstrap b = new ServerBootstrap();
       
       b.option(ChannelOption.SO_BACKLOG, 1024);
       b.group(bossGroup, workerGroup)
-        .channel(NioServerSocketChannel.class)
+        .channel(EpollServerSocketChannel.class)
+        .childOption(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED)
+        // .channel(NioServerSocketChannel.class)
         .option(ChannelOption.TCP_NODELAY, true)
         // .option(ChannelOption.SO_BACKLOG, 100)
-
         // .handler(new LoggingHandler(LogLevel.INFO))
-        //.channel(EpollServerSocketChannel.class)
-        //.childOption(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED)
         .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
         .childHandler(new ChannelInitializer<SocketChannel>() {
           @Override
