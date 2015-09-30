@@ -57,6 +57,10 @@ http://localhost:8080/index
 http://localhost:8080/:index/index
 - or -
 http://localhost:8080/root:index/index
+                      ^    ^     ^
+                      |    |     method name
+                      |    class name
+                      package name
 ```
 You also have to create a root.view package and a matching template there. So if you have Index.java you have to have index.html in root.view.
 
@@ -145,7 +149,7 @@ Method | Function
 `DB.insert("QRY", args)` | Returns mysql-last-id
 `DB.update("QRY", args)` | Returns manipulated row nums
 
-## Annotations
+## Method Annotations
 Annotation | Function
 ------------ | -------------
 `@Api` | Marks method as API -- ignores any template rendering
@@ -221,9 +225,14 @@ http://localhost:8080/seller:/
 ```
 Or update like this:
 ```
-http://localhost:8080/seller:/update/1/Awesome
+http://localhost:8080/seller:index/update/1/Awesome
+                      ^      ^     ^      ^ ^ 
+                      |      |     |      type safe args: id/name
+                      |      |     method name
+                      |      class name
+                      package name
 ```
-Arguments are typesafe, so if you try to pass a string where int is expected, you'll get an exception if you're under development mode, otherwise it will politely redirect you to /.
+Arguments are typesafe, so if you try to pass a `String` where `int` is expected, you'll get an exception if you're under development mode, otherwise it will politely redirect you to `/`.
 
 ## Template Engine
 Template engine is pure Java code plus for a short hand when writing for loops:

@@ -145,7 +145,7 @@ public abstract class HttpController {
       }
       
       if (_method.getAnnotation(Status.class) != null) {
-        status(HttpResponseStatus.valueOf(_method.getAnnotation(Status.class).code()));
+        status(HttpResponseStatus.valueOf(_method.getAnnotation(Status.class).value()));
       }  
 
       Object[] parameters = new Object[params.length - tokOffset];
@@ -185,7 +185,7 @@ public abstract class HttpController {
           echo(getTemplate(pkg, templateFields).render(templateFields));
         }
       } else
-        response.headers().set(HeaderNames.CONTENT_TYPE, _method.getAnnotation(Api.class).type());
+        response.headers().set(HeaderNames.CONTENT_TYPE, _method.getAnnotation(Api.class).value());
       
       
       if (Server.withCookies && cookies.size() > 0) {

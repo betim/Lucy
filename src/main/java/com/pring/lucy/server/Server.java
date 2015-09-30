@@ -4,7 +4,9 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.lang.ProcessBuilder.Redirect;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -137,78 +139,100 @@ public class Server {
     return this;
   }
   
-  final int BUFFER = 2048;
-  
-  public void init() {
+  private static final int BUFFER = 2048;
+
+  public void init() throws URISyntaxException {
     inJar = Server.class.getResource("Server.class").toString().startsWith("jar");
 
-    projectLocation = getClass()
-        .getResource("/" + getClass().getName().replace('.', '/') + ".class")
-        .toString().split("file:")[1].replace("Main.class", "../");
-
-    if (inJar && developmentMode == false) {
-      projectLocation = "/tmp/netty-1/";
+    if (inJar) {
+      projectLocation = "/tmp/lucy-1/";
 
       File tmpDir = new File(projectLocation);
       if (tmpDir.exists() && tmpDir.isDirectory()) {
         deleteDirectory(tmpDir);
       }
-      
       tmpDir.mkdir();
-      
+
+      extractJar(Server.class.getProtectionDomain().getCodeSource()
+          .getLocation().toURI().toString().split(":")[1], projectLocation);
+
       try {
-        BufferedOutputStream dest = null;
-        ZipInputStream zis = new ZipInputStream(new FileInputStream(Server.class
-            .getProtectionDomain().getCodeSource().getLocation().toURI().getPath()));
-        ZipEntry entry;
-        while ((entry = zis.getNextEntry()) != null) {
-          if (entry.isDirectory())
-            new File(projectLocation + File.separator + entry.getName()).mkdirs();
-          else {
-            new File(new File(projectLocation + File.separator + entry.getName()).getParent()).mkdirs();
-            
-            int count;
-            byte data[] = new byte[BUFFER];
-            FileOutputStream fos = new FileOutputStream(projectLocation + File.separator + entry.getName());
-            dest = new BufferedOutputStream(fos, BUFFER);
-            while ((count = zis.read(data, 0, BUFFER)) != -1) {
-              dest.write(data, 0, count);
-            }
-            
-            dest.flush();
-            dest.close();
-          }
-        }
+        ProcessBuilder pb = new ProcessBuilder("java", "entry.Main");
+        pb.directory(new File(projectLocation));
+        pb.redirectOutput(Redirect.INHERIT);
+        pb.redirectError(Redirect.INHERIT);
         
-        zis.close();
+        Process p = pb.start();
+        p.waitFor();
       } catch (Exception e) {
         e.printStackTrace();
       }
-
-      projectLocation = "/tmp/netty-1" + (getClass()
-          .getResource("/" + getClass().getName().replace('.', '/') + ".class")
-          .toString().split("file:")[1].replace("Main.class", "../")).split("!")[1];
-    }
-    new HotReload(developmentMode).registerAll(Paths.get(projectLocation)).start();
-
-    new Thread(() -> {
-      Thread.currentThread().setName("SESSION PURGER");
-      
-      long sessionAgeMillis = sessionAge * 1000;
-      
-      while (true) {
-        try { Thread.sleep(sessionAge * 1000 + 1000); }
-        catch (Exception e) { }
-        
-        long now = System.currentTimeMillis();
-        for (Session s : Session.sessionList.values())
-          if (now > s.lastUse() + sessionAgeMillis) {
-            Session.sessionList.remove(s.sessionId);
-          }
+    } else {
+      try {
+        projectLocation = getClass()
+            .getResource("/" + getClass().getName().replace('.', '/') + ".class")
+            .toString().split("file:")[1].replace("Main.class", "../");
+      } catch (Exception e) {
+        projectLocation = getClass()
+            .getResource("/" + getClass().getName().replace('.', '/') + ".class")
+            .toString().split("rsrc:")[1].replace("Main.class", "../");
       }
-    }).start();
+
+      new HotReload(developmentMode).registerAll(Paths.get(projectLocation)).start();
+      new Thread(() -> {
+        Thread.currentThread().setName("SESSION PURGER");
+        
+        long sessionAgeMillis = sessionAge * 1000;
+        
+        while (true) {
+          try { Thread.sleep(sessionAge * 1000 + 1000); }
+          catch (Exception e) { }
+          
+          long now = System.currentTimeMillis();
+          for (Session s : Session.sessionList.values())
+            if (now > s.lastUse() + sessionAgeMillis) {
+              Session.sessionList.remove(s.sessionId);
+            }
+        }
+      }).start();
+    }
   }
 
+  private static void extractJar(String jar, String location) {
+    try {
+      BufferedOutputStream dest = null;
+      ZipInputStream zis = new ZipInputStream(new FileInputStream(jar));
+      ZipEntry entry;
+      
+      while ((entry = zis.getNextEntry()) != null) {
+        if (entry.isDirectory())
+          new File(location + entry.getName()).mkdirs();
+        else {
+          new File(new File(location + entry.getName()).getParent()).mkdirs();
+          
+          int count;
+          byte data[] = new byte[BUFFER];
+          FileOutputStream fos = new FileOutputStream(location + entry.getName());
+          dest = new BufferedOutputStream(fos, BUFFER);
+          while ((count = zis.read(data, 0, BUFFER)) != -1) {
+            dest.write(data, 0, count);
+          }
+          
+          dest.flush();
+          dest.close();
+          
+          if (entry.getName().endsWith(".jar")) {
+            extractJar(location + entry.getName(), location);
+          }
+        }
+      }
+      
+      zis.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+  
   public static String getProjectLocation() {
     return projectLocation;
   }
@@ -217,7 +241,7 @@ public class Server {
     return developmentMode;
   }
   
-  public void serve() throws InterruptedException {
+  public void serve() throws Exception {
     init();
     
     /*

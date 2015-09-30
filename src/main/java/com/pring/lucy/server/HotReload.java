@@ -81,7 +81,6 @@ public class HotReload extends ClassLoader implements Runnable {
         for (Method m : cls.getMethods()) {          
           Server.methods.put(clsPkg + '.' + m.getName(), m);
         }
-        
         // System.out.printf("Loaded controller: %s\n", f.getName());
       }
     } else if (f.getName().endsWith(".html")) {
@@ -126,13 +125,13 @@ public class HotReload extends ClassLoader implements Runnable {
                   if (child.toString().endsWith(".class")) {
                     loader = new Reloader();
                     
-                    if (child.toAbsolutePath().toString().matches("(.*)controller(.*)"))
-                      if (event.kind() == ENTRY_DELETE)
+                    if (child.toAbsolutePath().toString().matches("(.*)controller(.*)")) {
+                      if (event.kind() == ENTRY_DELETE) {
                         Server.controllers.remove(
                             child.toAbsolutePath().toString().split("/../")[1]
                                 .toLowerCase().replace('/', '.').replace(".class", ""), 
                             loader.findClass(child.toAbsolutePath().toString()));
-                      else {
+                      } else {
                         Class<? extends HttpController> cls =
                             loader.findClass(child.toAbsolutePath().toString());
                         String clsPkg = child.toAbsolutePath().toString().split("/../")[1]
@@ -144,6 +143,7 @@ public class HotReload extends ClassLoader implements Runnable {
                           Server.methods.put(clsPkg + '.' + m.getName(), m);
                         }
                       }
+                    }
                   } else if (child.toString().endsWith(".html")) {
                     /*
                     TemplateEngine.recompileTemplate(
