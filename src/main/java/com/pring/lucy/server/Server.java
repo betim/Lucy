@@ -144,7 +144,7 @@ public class Server {
   public void init() throws URISyntaxException {
     inJar = Server.class.getResource("Server.class").toString().startsWith("jar");
 
-    if (inJar) {
+    if (inJar && !developmentMode) {
       projectLocation = "/tmp/lucy-1/";
 
       File tmpDir = new File(projectLocation);
