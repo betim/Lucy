@@ -1,36 +1,45 @@
-# Created by https://www.gitignore.io/api/clipse,c++,java,maven
+# Created by https://www.gitignore.io/api/eclipse,java,maven
 
-#!! ERROR: clipse is undefined. Use list command to see defined gitignore types !!#
+### Eclipse ###
+*.pydevproject
+.metadata
+.gradle
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
 
-### C++ ###
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# Eclipse Core
+.project
 
-# Precompiled Headers
-*.gch
-*.pch
+# External tool builders
+.externalToolBuilders/
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+# Locally stored "Eclipse launch configurations"
+*.launch
 
-# Fortran module files
-*.mod
+# CDT-specific
+.cproject
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+# JDT-specific (Eclipse Java Development Tools)
+.classpath
 
-# Executables
-*.exe
-*.out
-*.app
+# Java annotation processor (APT)
+.factorypath
+
+# PDT-specific
+.buildpath
+
+# sbteclipse plugin
+.target
+
+# TeXlipse plugin
+.texlipse
 
 
 ### Java ###
@@ -58,4 +67,5 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
+
 
