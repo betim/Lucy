@@ -21,11 +21,14 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollMode;
 import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
@@ -243,21 +246,30 @@ public class Server {
   
   public void serve() throws Exception {
     init();
-    
-    EpollEventLoopGroup bossGroup = new EpollEventLoopGroup();
-    EpollEventLoopGroup workerGroup = new EpollEventLoopGroup();
-    
-    // EventLoopGroup bossGroup = new NioEventLoopGroup();
-    // EventLoopGroup workerGroup = new NioEventLoopGroup();
+
+    EventLoopGroup bossGroup = null;
+    EventLoopGroup workerGroup = null;
     
     try {
       ServerBootstrap b = new ServerBootstrap();
+  
+      try {
+        bossGroup = new EpollEventLoopGroup();
+        workerGroup = new EpollEventLoopGroup();
+        
+        b.channel(EpollServerSocketChannel.class)
+        .childOption(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED);
+      } catch (Exception e) {
+        bossGroup = new NioEventLoopGroup();
+        workerGroup = new NioEventLoopGroup();
+        
+        b.channel(NioServerSocketChannel.class);
+        
+        System.out.println("Native epoll not available, defaulting to NIO.");
+      }
       
       b.option(ChannelOption.SO_BACKLOG, 1024);
       b.group(bossGroup, workerGroup)
-        .channel(EpollServerSocketChannel.class)
-        .childOption(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED)
-        // .channel(NioServerSocketChannel.class)
         .option(ChannelOption.TCP_NODELAY, true)
         // .option(ChannelOption.SO_BACKLOG, 100)
         // .handler(new LoggingHandler(LogLevel.INFO))

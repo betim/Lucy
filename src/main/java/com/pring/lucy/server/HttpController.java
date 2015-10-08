@@ -66,6 +66,8 @@ public abstract class HttpController {
   private String redirect = "";
   private HaltException halt = null;
   
+  private String template = "";
+  
   public void fire(ChannelHandlerContext _ctx, FullHttpRequest _request,
       String pkg, String method, String[] params, int tokOffset) throws Exception {
     ctx = _ctx;
@@ -173,20 +175,24 @@ public abstract class HttpController {
         throw halt;
       }
       
-      if (_method.getAnnotation(Api.class) == null) {
-        if (_method.getAnnotation(View.class) != null) {
-          if (!_method.getAnnotation(View.class).value().equals("")) {
-            String[] elems = pkg.split("\\.");
-            elems[elems.length - 1] = _method.getAnnotation(View.class).value();
-
-            echo(getTemplate(String.join(".", elems), templateFields).render(templateFields));
-          }
-        } else {
-          echo(getTemplate(pkg, templateFields).render(templateFields));
-        }
-      } else
+      if (_method.getAnnotation(Api.class) == null)
         response.headers().set(HeaderNames.CONTENT_TYPE, _method.getAnnotation(Api.class).value());
-      
+
+      if (_method.getAnnotation(View.class) != null) {
+        if (!_method.getAnnotation(View.class).value().equals("")) {
+          String[] elems = pkg.split("\\.");
+          elems[elems.length - 1] = _method.getAnnotation(View.class).value();
+
+          echo(getTemplate(String.join(".", elems), templateFields).render(templateFields));
+        }
+      } else if (template.length() > 0) {
+        String[] elems = pkg.split("\\.");
+        elems[elems.length - 1] = template;
+
+        echo(getTemplate(String.join(".", elems), templateFields).render(templateFields));
+      } else {
+        echo(getTemplate(pkg, templateFields).render(templateFields));
+      }
       
       if (Server.withCookies && cookies.size() > 0) {
         for (String cookie : ServerCookieEncoder.STRICT.encode(cookies))
@@ -444,5 +450,9 @@ public abstract class HttpController {
     return isKeepAlive;
   }
 
+  public void template(String name) {
+    template = name;
+  }
+  
   public abstract void index() throws Exception;
 }
