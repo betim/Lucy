@@ -175,7 +175,7 @@ public abstract class HttpController {
         throw halt;
       }
       
-      if (_method.getAnnotation(Api.class) == null)
+      if (_method.getAnnotation(Api.class) != null)
         response.headers().set(HeaderNames.CONTENT_TYPE, _method.getAnnotation(Api.class).value());
 
       if (_method.getAnnotation(View.class) != null) {

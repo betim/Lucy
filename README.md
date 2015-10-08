@@ -132,6 +132,7 @@ Method | Function
 `echo(msg)` | Echoes stuff
 `debug(msg)` | Prints stuff on running terminal
 `view(key, value)` | Passes key and value to template
+`template(name)` | Easy template selection (overrides `@View(name)`)
 `file(name)` | Gets File from uploaded file
 `files()` | Gets a List with uploaded `File`s
 `sendFile(path)` | Forces browser to download given file from path
@@ -152,12 +153,12 @@ Method | Function
 ## Method Annotations
 Annotation | Function
 ------------ | -------------
-`@Api` | Marks method as API -- ignores any template rendering
-`@Api("text/plain")` | Marks method as API -- ignores any template rendering and sets Content-Type
+`@Api` | Marks method as an API method
+`@Api("text/plain")` | Marks method as API and sets Content-Type
 `@NoSession` | Does not bother with session stuff
 `@Status(200)` | Sets HTTP response code
 `@View("index1")` | Sets custom view
-`@View("")` | Removes templating -- much like `@Api`
+`@View("")` | Removes templating
 
 ## Examples
 Say you have an API with buyer and seller. You can have the code separately like this:
@@ -188,9 +189,7 @@ public class Index extends HttpController {
 ```
 `buyer.view.index`:
 ```html
-<B>
-  {{ $myVar; }}
-</B>
+<B> {{ $myVar; }} </B>
 ```
 Then access it like this:
 ```
@@ -257,7 +256,7 @@ Template engine is pure Java code plus for a short hand when writing for loops:
 ```
 Database access obviously:
 ```html
-<li>
+<ul>
 {{
   for (ResultSet r : DB.select("select * from `sellers`;")) {
     <li>$r.getString(1);</li>
@@ -267,8 +266,7 @@ Database access obviously:
 ```
 Also Session through a `session` variable:
 ```
-I'm 
-{{
+I'm  {{
   if (session.getBoolean("isLoggedIn"))
     echo("<b>logged in. WOHOOOO</b>");
   else
