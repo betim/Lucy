@@ -107,12 +107,49 @@ public class TemplateEngine {
           
           continue;
         } else if (line.matches("(.*)\\{\\{(.*)\\}\\}(.*)")) {
-          buffer.append(parseLine(line.replace("{{", "$").replace("}}", ";"), true, path2));
+          int pos = 0, lastPos = 0;
+          while ((pos = line.indexOf("{{", lastPos)) > -1) {
+            int end = line.indexOf("}}", pos);
+            String html = line.substring(lastPos, pos);
+
+            if (html.length() > 0)
+              buffer.append("sb.append(\"")
+                .append(StringEscapeUtils.escapeJava(html))
+                .append("\\n").append("\");\n");
+
+            String java = line.substring(pos + 2, end);
+            if (java.length() > 0)
+              buffer.append(parseLine("$" + java + ";", true, path2));
+
+            lastPos = end + 2;
+          }
+          
+          String _t = line.substring(lastPos, line.length());
+          if (_t.length() > 0)
+            buffer.append("sb.append(\"")
+              .append(StringEscapeUtils.escapeJava(_t))
+              .append("\\n").append("\");\n");
         } else if (line.matches("(.*)\\{\\{(.*)")) {
-          javaCodeBlock.append(parseLine(line.replace("{{", ""), false, path2));
+          String tok[] = line.split("\\{\\{");
+          if (tok.length > 1) {
+            javaCodeBlock.append("sb.append(\"")
+              .append(StringEscapeUtils.escapeJava(tok[0]))
+              .append("\\n").append("\");\n");
+            
+            javaCodeBlock.append(parseLine(tok[1], false, path2));
+          } else
+            javaCodeBlock.append(parseLine(line.replace("{{", ""), false, path2));
           inJavaCodeBlock = true;
         } else if (line.matches("(.*)\\}\\}(.*)")) {
-          javaCodeBlock.append(parseLine(line.replace("}}", ""), false, path2));
+          String tok[] = line.split("\\}\\}");
+          if (tok.length > 1) {
+            javaCodeBlock.append(parseLine(tok[0], false, path2));
+            
+            javaCodeBlock.append("sb.append(\"")
+              .append(StringEscapeUtils.escapeJava(tok[1]))
+              .append("\\n").append("\");\n");
+          } else
+            javaCodeBlock.append(parseLine(line.replace("}}", ""), false, path2));
   
           buffer.append(javaCodeBlock.toString()
               .replace("echo", "sb.append")
@@ -132,7 +169,7 @@ public class TemplateEngine {
       in.close();
       isr.close();
     }
-    
+
     return buffer.toString();
   }
   

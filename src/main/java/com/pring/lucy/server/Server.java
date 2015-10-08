@@ -71,7 +71,6 @@ public class Server {
   protected static Map<String, Method> methods = 
       new ConcurrentHashMap<>();
   
-  
   public Server port(int p) {
     port = p;
     return this;
@@ -246,7 +245,7 @@ public class Server {
     init();
     
     EpollEventLoopGroup bossGroup = new EpollEventLoopGroup();
-    EpollEventLoopGroup workerGroup = new EpollEventLoopGroup(4);
+    EpollEventLoopGroup workerGroup = new EpollEventLoopGroup();
     
     // EventLoopGroup bossGroup = new NioEventLoopGroup();
     // EventLoopGroup workerGroup = new NioEventLoopGroup();

@@ -52,7 +52,6 @@ public class Handler extends ChannelInboundHandlerAdapter {
         method = tokens[2];
         tokCnt++;
       }
-      
 
       Class<? extends HttpController> controller = Server.controllers.get(pkg);
       if (controller != null) {

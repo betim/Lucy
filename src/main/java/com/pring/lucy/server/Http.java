@@ -5,6 +5,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.DATE;
 import static io.netty.handler.codec.http.HttpHeaders.Names.EXPIRES;
 import static io.netty.handler.codec.http.HttpHeaders.Names.LAST_MODIFIED;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static io.netty.handler.codec.http.HttpResponseStatus.FOUND;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -96,6 +97,7 @@ class Http {
   
   public static void sendRedirect(FullHttpResponse response, String newUri, ChannelHandlerContext ctx) {
     response.headers().set(HeaderNames.LOCATION, newUri);
+    response.setStatus(FOUND);
     ctx.write(response).addListener(ChannelFutureListener.CLOSE);
   }
 

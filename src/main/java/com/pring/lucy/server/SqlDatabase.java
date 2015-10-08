@@ -11,9 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class SqlDatabase {
-  protected SqlDatabase() {
-    
-  }
+  protected SqlDatabase() { }
   
   public Connection getConnection() throws SQLException {
     return Server.ds.getConnection();
