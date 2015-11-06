@@ -57,6 +57,11 @@ public class Server {
   protected static int sessionAge = 0;
   protected static boolean compress = false;
   protected static boolean upload = false;
+  protected static boolean epoll = false;
+  protected static boolean join = false;
+  
+  protected static boolean database = false;
+  HikariConfig config;
   
   protected static String projectLocation = "";
   protected static boolean inJar = false;
@@ -96,17 +101,22 @@ public class Server {
   }
 
   public Server database(String cs, String u, String p) {
-    HikariConfig config = new HikariConfig();
+    config = new HikariConfig();
 
     config.setJdbcUrl(cs);
     config.setUsername(u);
     config.setPassword(p);
-    
-    config.addDataSourceProperty("cachePrepStmts", "true");
-    config.addDataSourceProperty("prepStmtCacheSize", "350");
-    config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
-    ds = new HikariDataSource(config);
+    config.addDataSourceProperty("cachePrepStmts", "true");
+    config.addDataSourceProperty("prepStmtCacheSize", "250");
+    config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+    config.addDataSourceProperty("useServerPrepStmts", "false");
+    
+    config.setInitializationFailFast(true);
+    config.setIdleTimeout(10000);
+    config.setMaximumPoolSize(10);
+    
+    database = true;
     
     return this;
   }
@@ -138,6 +148,18 @@ public class Server {
   
   public Server maxChunkSizeInBytes(int maxChunkSizeBytes) {
     maxChunkSizeInBytes = maxChunkSizeBytes;
+    
+    return this;
+  }
+  
+  public Server epoll() {
+    epoll = true;
+    
+    return this;
+  }
+  
+  public Server sync() {
+    join = true;
     
     return this;
   }
@@ -246,58 +268,73 @@ public class Server {
   
   public void serve() throws Exception {
     init();
-
-    EventLoopGroup bossGroup = null;
-    EventLoopGroup workerGroup = null;
     
-    try {
-      ServerBootstrap b = new ServerBootstrap();
-  
+    if (database)
+      ds = new HikariDataSource(config);
+    
+    new Thread(() -> {
+      Thread.currentThread().setName("NETTY");
+      
+      EventLoopGroup bossGroup = null;
+      EventLoopGroup workerGroup = null;
+      
       try {
-        bossGroup = new EpollEventLoopGroup();
-        workerGroup = new EpollEventLoopGroup();
+        ServerBootstrap b = new ServerBootstrap();
+    
+        if (epoll) {
+          bossGroup = new EpollEventLoopGroup();
+          workerGroup = new EpollEventLoopGroup();
+          
+          b.channel(EpollServerSocketChannel.class)
+          .childOption(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED);
+          
+          System.out.println("Using native epoll.");
+        } else {
+          bossGroup = new NioEventLoopGroup();
+          workerGroup = new NioEventLoopGroup();
+          
+          b.channel(NioServerSocketChannel.class);
+          
+          System.out.println("Using java NIO.");
+        }
         
-        b.channel(EpollServerSocketChannel.class)
-        .childOption(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED);
+        b.option(ChannelOption.SO_BACKLOG, 1024);
+        b.group(bossGroup, workerGroup)
+          .option(ChannelOption.TCP_NODELAY, true)
+          // .option(ChannelOption.SO_BACKLOG, 100)
+          // .handler(new LoggingHandler(LogLevel.INFO))
+          .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+          .childHandler(new ChannelInitializer<SocketChannel>() {
+            @Override
+            public void initChannel(SocketChannel ch) {
+              ch.pipeline().addLast(new HttpServerCodec());
+              ch.pipeline().addLast(new HttpRequestDecoder(65536, 65536, maxChunkSizeInBytes, false));
+              ch.pipeline().addLast(new HttpObjectAggregator(65536));
+              ch.pipeline().addLast(new ChunkedWriteHandler());
+              
+              if (compress)
+                ch.pipeline().addLast("deflater", new HttpContentCompressor(1));
+              
+              ch.pipeline().addLast(new Handler());
+              ch.pipeline().addLast(new StaticFileHandler());
+            }   
+          });
+        
+        Channel ch = b.bind(port).sync().channel();
+        
+        System.out.println("Ready. Navigate to http://localhost:" + port + '/');
+        
+        if (join)
+          Thread.currentThread().join();
+        
+        ch.closeFuture().sync();
       } catch (Exception e) {
-        bossGroup = new NioEventLoopGroup();
-        workerGroup = new NioEventLoopGroup();
-        
-        b.channel(NioServerSocketChannel.class);
-        
-        System.out.println("Native epoll not available, defaulting to NIO.");
+        e.printStackTrace();
+      } finally {
+        bossGroup.shutdownGracefully();
+        workerGroup.shutdownGracefully();
       }
-      
-      b.option(ChannelOption.SO_BACKLOG, 1024);
-      b.group(bossGroup, workerGroup)
-        .option(ChannelOption.TCP_NODELAY, true)
-        // .option(ChannelOption.SO_BACKLOG, 100)
-        // .handler(new LoggingHandler(LogLevel.INFO))
-        .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-        .childHandler(new ChannelInitializer<SocketChannel>() {
-          @Override
-          public void initChannel(SocketChannel ch) {
-            ch.pipeline().addLast(new HttpServerCodec());
-            ch.pipeline().addLast(new HttpRequestDecoder(65536, 65536, maxChunkSizeInBytes, false));
-            ch.pipeline().addLast(new HttpObjectAggregator(65536));
-            ch.pipeline().addLast(new ChunkedWriteHandler());
-            
-            if (compress)
-              ch.pipeline().addLast("deflater", new HttpContentCompressor(1));
-            
-            ch.pipeline().addLast(new Handler());
-            ch.pipeline().addLast(new StaticFileHandler());
-          }   
-        });
-      
-      Channel ch = b.bind(port).sync().channel();
-      
-      System.out.println("Ready. Navigate to http://localhost:" + port + '/');
-      ch.closeFuture().sync();
-    } finally {
-      bossGroup.shutdownGracefully();
-      workerGroup.shutdownGracefully();
-    }
+    }).start();
   }
   
   private static boolean deleteDirectory(File directory) {
@@ -314,6 +351,6 @@ public class Server {
       }
     }
     
-    return (directory.delete());
+    return directory.delete();
   }
 }

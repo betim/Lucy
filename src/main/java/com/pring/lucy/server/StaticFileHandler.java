@@ -62,7 +62,7 @@ public class StaticFileHandler extends SimpleChannelInboundHandler<FullHttpReque
       return;
     }
     
-    sendFile(ctx, Server.staticFileLocation + Http.sanitizeUri(request.getUri()), request, false);
+    sendFile(ctx, Server.staticFileLocation + Http.sanitizeFileUri(request.getUri()), request, false);
   }
   
   protected static void sendFile(ChannelHandlerContext ctx, String path,

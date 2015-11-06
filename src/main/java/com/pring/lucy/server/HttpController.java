@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.pring.lucy.annotations.Api;
 import com.pring.lucy.annotations.NoSession;
@@ -22,10 +24,6 @@ import com.pring.lucy.http.HeaderNames;
 import com.pring.lucy.http.HttpStatus;
 import com.pring.lucy.http.MimeType;
 
-import java.util.Set;
-import java.util.TreeSet;
-
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -59,9 +57,9 @@ public abstract class HttpController {
   private Set<Cookie> cookies = new TreeSet<Cookie>();
 
   private Session session = Server.DUMMY_SESSION;
-  private String sessionId = String.valueOf(System.currentTimeMillis());
-  
-  public final SqlDatabase DB = new SqlDatabase();
+  private String sessionId = new StringBuilder()
+      .append('B').append(System.currentTimeMillis())
+      .append('-').append(System.nanoTime()).toString();
   
   private String redirect = "";
   private HaltException halt = null;
@@ -100,8 +98,7 @@ public abstract class HttpController {
       }
       
       view("session", session);
-      view("DB", DB);
-      
+
       if (request.headers().contains(HeaderNames.CONTENT_TYPE)
           && request.headers().get(HeaderNames.CONTENT_TYPE).startsWith("application/x-www-form-urlencoded"))
         form = new QueryStringDecoder(request.content().toString(CharsetUtil.ISO_8859_1), false).parameters();
@@ -178,18 +175,18 @@ public abstract class HttpController {
       if (_method.getAnnotation(Api.class) != null)
         response.headers().set(HeaderNames.CONTENT_TYPE, _method.getAnnotation(Api.class).value());
 
-      if (_method.getAnnotation(View.class) != null) {
+      if (template.length() > 0) {
+        String[] elems = pkg.split("\\.");
+        elems[elems.length - 1] = template;
+
+        echo(getTemplate(String.join(".", elems), templateFields).render(templateFields));
+      } else if (_method.getAnnotation(View.class) != null) {
         if (!_method.getAnnotation(View.class).value().equals("")) {
           String[] elems = pkg.split("\\.");
           elems[elems.length - 1] = _method.getAnnotation(View.class).value();
 
           echo(getTemplate(String.join(".", elems), templateFields).render(templateFields));
         }
-      } else if (template.length() > 0) {
-        String[] elems = pkg.split("\\.");
-        elems[elems.length - 1] = template;
-
-        echo(getTemplate(String.join(".", elems), templateFields).render(templateFields));
       } else {
         echo(getTemplate(pkg, templateFields).render(templateFields));
       }
@@ -202,9 +199,9 @@ public abstract class HttpController {
       if (redirect.length() > 0)
         Http.sendRedirect(response, redirect, ctx);
       else {
-        ByteBuf b = Unpooled.copiedBuffer(buffer.toString(), CharsetUtil.UTF_8);
-        response.content().writeBytes(b);
-        b.release();
+        // ByteBuf b = Unpooled.copiedBuffer(buffer.toString(), CharsetUtil.UTF_8);
+        response.content().writeBytes(Unpooled.copiedBuffer(buffer.toString(), CharsetUtil.UTF_8));
+        // b.release();
         
         response.headers().add(HeaderNames.CONTENT_LENGTH, response.content().readableBytes());
         
@@ -302,6 +299,10 @@ public abstract class HttpController {
     return cookies;
   }
 
+  public Map<String, List<String>> queryParams() {
+    return queryParameters;
+  }
+  
   private List<String> queryParams(String key, boolean number) {
     if (queryParameters.containsKey(key))
       return queryParameters.get(key);
@@ -328,6 +329,9 @@ public abstract class HttpController {
     return Double.valueOf(queryParams(key, true).get(0));
   }
   
+  public Map<String, List<String>> formParams() {
+    return form;
+  }
   
   private List<String> formParams(String key, boolean number) {
     if (form.containsKey(key))
@@ -352,7 +356,10 @@ public abstract class HttpController {
   }
   
   public Object session(String key) {
-    return session.get(key);
+    if (session.map().containsKey(key))
+      return session.get(key);
+    
+    return false;
   }
   
   public void session(String key, Object value) {
@@ -452,6 +459,11 @@ public abstract class HttpController {
 
   public void template(String name) {
     template = name;
+  }
+  
+  public void redirectWithTemplate(String to, String template) {
+    template(template);
+    redirect(to);
   }
   
   public abstract void index() throws Exception;

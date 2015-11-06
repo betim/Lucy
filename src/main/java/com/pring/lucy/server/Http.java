@@ -35,17 +35,19 @@ class Http {
   public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
   public static final int    HTTP_CACHE_SECONDS = 60;
   
-  public static String sanitizeUri(String uri) {
-    try {
-      uri = URLDecoder.decode(uri, "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      try {
-        uri = URLDecoder.decode(uri, "ISO-8859-1");
-      } catch (UnsupportedEncodingException e1) {
-        throw new Error();
-      }
-    }
+  public static String sanitizeUri(String uri) throws UnsupportedEncodingException {
+    uri = URLDecoder.decode(uri, "UTF-8");
 
+    int pos = uri.indexOf("?");
+    if (pos != -1) {
+      uri = uri.substring(0, pos);
+    }
+    
+    return uri;
+  }
+  
+  public static String sanitizeFileUri(String uri) throws UnsupportedEncodingException {
+    uri = URLDecoder.decode(uri, "UTF-8");
     uri = uri.replace('/', File.separatorChar);
 
     if (uri.contains(File.separator + ".")

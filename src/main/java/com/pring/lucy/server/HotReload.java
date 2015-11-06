@@ -78,7 +78,7 @@ public class HotReload extends ClassLoader implements Runnable {
 
         Server.controllers.put(clsPkg, cls);
         
-        for (Method m : cls.getMethods()) {          
+        for (Method m : cls.getDeclaredMethods()) {
           Server.methods.put(clsPkg + '.' + m.getName(), m);
         }
         // System.out.printf("Loaded controller: %s\n", f.getName());

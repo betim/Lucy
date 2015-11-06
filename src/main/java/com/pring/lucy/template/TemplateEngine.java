@@ -14,12 +14,14 @@ import com.pring.lucy.server.Server;
 public class TemplateEngine {
   private static String imports = 
       "import com.pring.lucy.template.Template;\n"
+      + "import com.pring.lucy.server.SqlDB;\n"
+      + "import com.pring.lucy.server.SqlDB.ResultSetIterator;\n"
       + "import java.util.HashMap;\n"
       + "import java.util.Iterator;\n"
       + "import java.util.Map;\n"
       + "import java.util.Set;\n"
       + "import java.sql.ResultSet;\n"
-      + "import com.pring.lucy.server.SqlDatabase.ResultSetIterator;\n"
+      + "import javax.sql.rowset.CachedRowSet;\n"
       + "import io.netty.handler.codec.http.cookie.Cookie;\n";
 
   private static Compiler javaCompiler = Compiler.instance();
@@ -58,15 +60,14 @@ public class TemplateEngine {
 
     int i = 0;
     for (String s : templateFields.keySet()) {
-      clazz.append(templateFields.get(s).getClass().getTypeName())
+      clazz.append(templateFields.get(s).getClass().getTypeName().replace('$', '.'))
         .append(" ").append(s);
       
       if (++i < templateFields.size())
         clazz.append(',');
     }
 
-    clazz
-      .append(") throws Exception { \nStringBuilder sb = new StringBuilder(); ");
+    clazz.append(") throws Exception { \nStringBuilder sb = new StringBuilder(); ");
     
     clazz.append(parseFile(path, path));
     
@@ -115,7 +116,7 @@ public class TemplateEngine {
             if (html.length() > 0)
               buffer.append("sb.append(\"")
                 .append(StringEscapeUtils.escapeJava(html))
-                .append("\\n").append("\");\n");
+                .append("\");\n");
 
             String java = line.substring(pos + 2, end);
             if (java.length() > 0)

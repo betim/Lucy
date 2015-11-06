@@ -78,7 +78,9 @@ You also have to create a root.view package and a matching template there. So if
       // 5. production()
       // 6. staticLocation("/var/www")
       // 7. port(8080)
-      // 8. serve();
+      // 8. epoll()
+      // 9. sync()
+      // #. serve();
 ...
 ```
 - ``withoutCookies()`` <BR> Will not set any cookies at all. In case you have a static website.
@@ -88,6 +90,8 @@ You also have to create a root.view package and a matching template there. So if
 - ``production()`` <BR> Will load the clases only once. No hot reloading. It must be uncommented when exporting to final JAR.
 - ``staticLocation("absolute path")`` <BR> Sets the location of static files.
 - ``port(8080)`` <BR> Sets the port where to listen.
+- ``epoll()`` <BR> Enables native Linux epoll.
+- ``sync()`` <BR> Joins main thread (in case you don't have anything else ``serve()``.
 - ``serve()`` <BR> Kicks off everything.
 
 ## Features
@@ -102,6 +106,7 @@ You also have to create a root.view package and a matching template there. So if
 Method | Function
 ------------ | -------------
 `redirect(to)` | Redirects to specified URL
+`redirectWithTemplate(to, templateName)` | Redirects to specified URL and sets a desired template
 `status(code)` | Sets HTTP status code
 `method()` | Returns request HTTP method
 `halt()` | Halts execution
@@ -143,12 +148,13 @@ Method | Function
 `url()` | Gets request URL
 `userAgent()` | Does not work
 `isKeepAlive()` | Gets connection type
-`DB.selectCell("QRY")` | Returns one row with one cell
-`DB.selectCell("QRY", args[])` | Returns one row with one cell
-`DB.select("QRY")` | Returns an Iterable<ResultSet> so you can loop through it
-`DB.select("QRY", args)` | Returns an Iterable<ResultSet> so you can loop through it
-`DB.insert("QRY", args)` | Returns mysql-last-id
-`DB.update("QRY", args)` | Returns manipulated row nums
+`SqlDB.selectCell("QRY")` | Returns one row with one cell
+`SqlDB.selectCell("QRY", args[])` | Returns one row with one cell
+`SqlDB.select("QRY")` | Returns an Iterable<ResultSet> so you can loop through it
+`SqlDB.select("QRY", args)` | Returns an Iterable<ResultSet> so you can loop through it
+`SqlDB.insert("QRY", args)` | Returns mysql-last-id
+`SqlDB.update("QRY", args)` | Returns manipulated row nums
+`SqlDB.delete("QRY", args)` | Returns manipulated row nums (Alias to `.update`)
 
 ## Method Annotations
 Annotation | Function
@@ -206,14 +212,14 @@ public class Index extends HttpController {
   @Override
   @Api
   public void index() throws Exception {
-    for (ResultSet r : DB.select("select * from `sellers`;")) {
+    for (ResultSet r : SqlDB.select("select * from `sellers`;")) {
       echo(r.getString("id") + " => " + r.getString("name") + '\n');
     }
   }
 
   @Api
   public void update(int id, String name) {
-    DB.update("UPDATE `sellers` SET `name` = ? WHERE `id` = ?", new Object[] { name, id });
+    SqlDB.update("UPDATE `sellers` SET `name` = ? WHERE `id` = ?", new Object[] { name, id });
     redirect("/");
   }
 }
@@ -258,7 +264,7 @@ Database access obviously:
 ```html
 <ul>
 {{
-  for (ResultSet r : DB.select("select * from `sellers`;")) {
+  for (ResultSet r : SqlDB.select("select * from `sellers`;")) {
     <li>$r.getString(1);</li>
   }
 }}
@@ -275,7 +281,7 @@ I'm  {{
 ```
 ## Roadmap
 - [x] Maven
-- [ ] WebSocket
+- [ ] WebSockets
 - [ ] Spdy
 - [ ] MQTT
 - [x] Some Optimizations

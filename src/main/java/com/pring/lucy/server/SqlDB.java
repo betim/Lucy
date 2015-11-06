@@ -10,18 +10,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class SqlDatabase {
-  protected SqlDatabase() { }
+import javax.sql.rowset.CachedRowSet;
+
+import com.sun.rowset.CachedRowSetImpl;
+ 
+public class SqlDB {
+  protected SqlDB() { }
   
-  public Connection getConnection() throws SQLException {
+  public static Connection getConnection() throws SQLException {
     return Server.ds.getConnection();
   }
 
-  public String selectCell(String sql) {
-    return selectCell(sql, new Object[] {});
-  }
-  
-  public String selectCell(String sql, Object... args) {
+  public static String selectCell(String sql, Object... args) {
     StringBuilder buffer = new StringBuilder();
 
     Connection c = null;
@@ -34,7 +34,7 @@ public class SqlDatabase {
       ResultSet rs = stmt.executeQuery();
       
       if (rs.next())
-        buffer.append(rs.getString(1)).append('\n');
+        buffer.append(rs.getString(1));
       
       rs.close();
     } catch (Exception e) {
@@ -50,28 +50,72 @@ public class SqlDatabase {
     
     return buffer.toString();
   }
-  
-  public ResultSetIterator select(String query) {
-    return select(query, new Object[] {});
+
+  public static CachedRowSet query(String query, Object... args) {
+    CachedRowSet result = null;
+
+    Connection connection = null;
+    PreparedStatement statement = null;
+    ResultSet resultSet = null;
+
+    try {
+      result = new CachedRowSetImpl();
+      
+      connection = getConnection();
+      statement = connection.prepareStatement(query);
+      setArgs(statement, args);
+      resultSet = statement.executeQuery();
+      
+      result.populate(resultSet);
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        resultSet.close();
+        statement.close();
+        connection.close();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
+
+    return result;
   }
   
-  public ResultSetIterator select(String query, Object... args) {
+  public static ResultSetIterator select(String query, Object... args) {
+    return new ResultSetIterator(query, args);
+  }
+  
+  public static long insert(String query, Object... args) {
+    long result = -1;
+
     Connection c = null;
     PreparedStatement stmt = null;
     try {
       c = getConnection();
-      stmt = c.prepareStatement(query);
+      stmt = c.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
       setArgs(stmt, args);
-      
-      return new ResultSetIterator(stmt.executeQuery(), stmt, c);
+
+      stmt.executeUpdate();
+      ResultSet rs = stmt.getGeneratedKeys();
+      if (rs.next()) {
+        result = rs.getLong(1);
+      }
     } catch (Exception e) {
       e.printStackTrace();
+    } finally {
+      try {
+        stmt.close();
+        c.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
     
-    return new ResultSetIterator();
+    return result;
   }
-  
-  public int update(String query, Object... args) {
+
+  public static int update(String query, Object... args) {
     int result = 0;
     
     Connection c = null;
@@ -95,39 +139,12 @@ public class SqlDatabase {
     
     return result;
   }
-
-  public long insert(String query, Object... args) {
-    long result = -1;
-
-    Connection c = null;
-    PreparedStatement stmt = null;
-    try {
-      c = getConnection();
-      stmt = c.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-      setArgs(stmt, args);
-
-      stmt.executeUpdate();
-      ResultSet rs = stmt.getGeneratedKeys();
-      if (rs.next()) {
-        result = rs.getLong(1);
-      }
-
-      rs.close();
-    } catch (Exception e) {
-      e.printStackTrace();
-    } finally {
-      try {
-        stmt.close();
-        c.close();
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
-    
-    return result;
+  
+  public static int delete(String query, Object... args) {
+    return update(query, args);
   }
   
-  private void setArgs(PreparedStatement stmt, Object... args) {
+  private static void setArgs(PreparedStatement stmt, Object... args) {
     for (int i = 0; i < args.length; i++) {
       try {
         stmt.setObject(i + 1, args[i]);
@@ -138,19 +155,25 @@ public class SqlDatabase {
   }
   
   public static class ResultSetIterator implements Iterable<ResultSet> {
-    private Connection conn;
-    private Statement stmt;
-    private ResultSet rs;
-
     private List<String> columns = new ArrayList<String>();
     
-    private ResultSetIterator(ResultSet rs, Statement stmt, Connection conn) {
-      this.conn = conn;
-      this.stmt = stmt;
-      this.rs = rs;
+    private Connection connection;
+    private PreparedStatement statement;
+    private ResultSet resultSet;
 
+    private ResultSetIterator(String query, Object[] args) {
       try {
-        ResultSetMetaData cols = rs.getMetaData();
+        connection = getConnection();
+        
+        statement = connection.prepareStatement(query);
+        setArgs(statement, args);
+        resultSet = statement.executeQuery();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      
+      try {
+        ResultSetMetaData cols = resultSet.getMetaData();
         for (int i = 1; i <= cols.getColumnCount(); i++) {
           columns.add(cols.getColumnName(i));
         }
@@ -159,20 +182,8 @@ public class SqlDatabase {
       }
     }
     
-    private ResultSetIterator() { }
-    
     public List<String> columns() {
       return columns;
-    }
-    
-    public void close() {
-      try {
-        rs.close();
-        stmt.close();
-        conn.close();
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
     }
     
     @Override
@@ -181,15 +192,14 @@ public class SqlDatabase {
         @Override
         public boolean hasNext() {
           boolean hasNext = false;
-          
+
           try {
-            hasNext = rs.next();
+            hasNext = resultSet.next();            
           } catch (Exception e) {
             e.printStackTrace();
-            return hasNext;
           }
           
-          if (!hasNext)
+          if (hasNext == false)
             close();
           
           return hasNext;
@@ -197,9 +207,19 @@ public class SqlDatabase {
 
         @Override
         public ResultSet next() {
-          return rs;
+          return resultSet;
         }
       };
+    }
+    
+    public void close() {
+      try {
+        resultSet.close();
+        statement.close();
+        connection.close();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
     }
   }
 }
