@@ -15,19 +15,6 @@ A micro HTTP framework based on Netty for Java.
 ```
 
 ## Getting Started
-- Define a handler class:
-```java
-package root.controller;
-
-import org.pring.lucy.server.HttpController;
-
-public class Index extends HttpController {
-  @Override
-  public void index() throws Exception {
-    echo("Hello World");
-  }
-}
-```
 - Define an entry point:
 ```java
 package entry;
@@ -48,6 +35,19 @@ public class Main extends Server {
   }
 }
 ```
+- Define a handler class:
+```java
+package root.controller;
+
+import org.pring.lucy.server.HttpController;
+
+public class Index extends HttpController {
+  @Override
+  public void index() throws Exception {
+    echo("Hello World");
+  }
+}
+```
 - Test it:
 ```
 http://localhost:8080/
@@ -62,7 +62,7 @@ http://localhost:8080/root:index/index
                       |    class name
                       package name
 ```
-You also have to create a root.view package and a matching template there. So if you have Index.java you have to have index.html in root.view.
+Create a ``root.view`` ``package`` and a matching ``html`` template in it if you want templating. So if you have ``Index.java`` you must have ``index.html`` (lowercase) in root.view.
 
 ```
 / -> binds to root.*
@@ -100,7 +100,7 @@ You also have to create a root.view package and a matching template there. So if
 - Sessions
 - Database
 - Very simple interface
-- Lightweight
+- Lightweight and somewhat fast
 
 ## Methods
 Method | Function
