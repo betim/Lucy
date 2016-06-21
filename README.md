@@ -292,7 +292,7 @@ I'm  {{
 https://github.com/betim/Lucy/releases/tag/1.1
 
 ## Dependencies
-- Netty 4.0.31.Final
+- Netty 4.0.37.Final
 - commons-lang3 3.4
 - HikariCP 2.4.1
 - slf4j-api 1.7.12
