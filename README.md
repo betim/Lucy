@@ -286,10 +286,10 @@ I'm  {{
 - [ ] Spdy
 - [ ] MQTT
 - [x] Some Optimizations
-- [ ] Writing code on Xtend
+- [x] Writing code on Xtend
 
 ## Download
-https://github.com/betim/Lucy/releases/tag/1.0
+https://github.com/betim/Lucy/releases/tag/1.1
 
 ## Dependencies
 - Netty 4.0.31.Final
