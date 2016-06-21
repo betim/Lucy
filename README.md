@@ -1,5 +1,5 @@
 # Lucy
-A simple HTTP framework based on Netty for Java.
+A micro HTTP framework based on Netty for Java.
 
 ## Requirements
 - JDK8+
@@ -159,12 +159,13 @@ Method | Function
 ## Method Annotations
 Annotation | Function
 ------------ | -------------
-`@Api` | Marks method as an API method
-`@Api("text/plain")` | Marks method as API and sets Content-Type
+`@Api` | Marks method as an API method and ignores templating
+`@Api("text/plain")` | Marks method as API and sets Content-Type and ignores templating
 `@NoSession` | Does not bother with session stuff
 `@Status(200)` | Sets HTTP response code
 `@View("index1")` | Sets custom view
 `@View("")` | Removes templating
+`@NoAccess` | Does not check `hasAccess()` which returns boolean, for e.x: isLoggedIn
 
 ## Examples
 Say you have an API with buyer and seller. You can have the code separately like this:

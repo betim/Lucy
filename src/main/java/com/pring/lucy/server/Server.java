@@ -100,7 +100,7 @@ public class Server {
     return this;
   }
 
-  public Server database(String cs, String u, String p) {
+  public Server database(String cs, String u, String p, String... driver) {
     config = new HikariConfig();
 
     config.setJdbcUrl(cs);
@@ -114,7 +114,10 @@ public class Server {
     
     config.setInitializationFailFast(true);
     config.setIdleTimeout(10000);
-    config.setMaximumPoolSize(10);
+    config.setMaximumPoolSize(2);
+    
+    if (driver.length > 0)
+      config.setDriverClassName(driver[0]);
     
     database = true;
     

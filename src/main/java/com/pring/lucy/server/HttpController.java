@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.pring.lucy.annotations.Api;
+import com.pring.lucy.annotations.NoAccess;
 import com.pring.lucy.annotations.NoSession;
 import com.pring.lucy.annotations.Status;
 import com.pring.lucy.annotations.View;
@@ -166,16 +167,20 @@ public abstract class HttpController {
         idx++;
       }
 
-      _method.invoke(this, parameters);
-
+      if (_method.getAnnotation(NoAccess.class) == null && hasAccess())
+        _method.invoke(this, parameters);
+      else if (_method.getAnnotation(NoAccess.class) != null)
+        _method.invoke(this, parameters);
+      else
+        halt = new HaltException("No access", 401);
+        
       if (halt != null) {
         throw halt;
       }
       
-      if (_method.getAnnotation(Api.class) != null)
+      if (_method.getAnnotation(Api.class) != null) {
         response.headers().set(HeaderNames.CONTENT_TYPE, _method.getAnnotation(Api.class).value());
-
-      if (template.length() > 0) {
+      } else if (template.length() > 0) {
         String[] elems = pkg.split("\\.");
         elems[elems.length - 1] = template;
 
@@ -343,6 +348,10 @@ public abstract class HttpController {
     return l;
   }
   
+  public List<String> formParams(String key) {
+    return formParams(key, false);
+  }
+  
   public String POST(String key) {
     return formParams(key, false).get(0);
   }
@@ -426,7 +435,11 @@ public abstract class HttpController {
   }
   
   public void sendFile(String filePath) throws Exception {
-    StaticFileHandler.sendFile(ctx, filePath, request, true);
+    StaticFileHandler.sendFile(ctx, filePath, request, true, null);
+  }
+  
+  public void sendFile(String filePath, String fileName) throws Exception {
+    StaticFileHandler.sendFile(ctx, filePath, request, true, fileName);
   }
 
   public void sendFile(byte[] data, String fileName) throws Exception {
@@ -464,6 +477,10 @@ public abstract class HttpController {
   public void redirectWithTemplate(String to, String template) {
     template(template);
     redirect(to);
+  }
+  
+  public boolean hasAccess() {
+    return true;
   }
   
   public abstract void index() throws Exception;

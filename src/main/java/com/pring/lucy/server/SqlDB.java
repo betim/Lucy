@@ -7,6 +7,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -67,14 +68,49 @@ public class SqlDB {
       resultSet = statement.executeQuery();
       
       result.populate(resultSet);
+    } catch (SQLException e) {
+      if (e.getMessage().contains("crashed")) {
+        String tokens[] = e.getMessage().split("\\s+");
+        System.out.println(e.getMessage() + ". Trying to auto-repair.");
+        
+        Connection tempCon = null;
+        PreparedStatement tempStmt = null;
+        try {
+          tempCon = getConnection();
+          tempStmt = tempCon.prepareStatement("REPAIR TABLE " 
+              + tokens[1].replaceAll("\\'", "`") + ";");
+          tempStmt.executeQuery();
+        } catch (Exception ex) {
+          ex.printStackTrace();
+        } finally {
+          try {
+            tempStmt.close();
+            tempCon.close();
+          } catch (Exception ex) {
+            ex.printStackTrace();
+          }
+        }
+        
+        return query(query, args);
+      }
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
       try {
         resultSet.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      
+      try {
         statement.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      
+      try {
         connection.close();
-      } catch (SQLException e) {
+      } catch (Exception e) {
         e.printStackTrace();
       }
     }
@@ -169,6 +205,7 @@ public class SqlDB {
         setArgs(statement, args);
         resultSet = statement.executeQuery();
       } catch (Exception e) {
+        close();
         e.printStackTrace();
       }
       
@@ -219,6 +256,10 @@ public class SqlDB {
         connection.close();
       } catch (SQLException e) {
         e.printStackTrace();
+      } finally {
+        try {
+          connection.close();
+        } catch (Exception e) { }
       }
     }
   }

@@ -67,7 +67,7 @@ public class Handler extends ChannelInboundHandlerAdapter {
     if (cause instanceof HaltException)
       Http.sendException(ctx, HttpResponseStatus.valueOf(((HaltException) cause).status), cause.getMessage());
     else {
-      if (Server.developmentMode) {
+      if (true || Server.developmentMode) {
         if (StringUtils.contains(cause.getMessage(), "cannot find symbol")) {
           String ex[] = cause.getMessage().split("\n");
           

@@ -171,20 +171,23 @@ public class HotReload extends ClassLoader implements Runnable {
     @SuppressWarnings("unchecked")
     @Override
     public Class<? extends HttpController> findClass(String path) {
-      byte[] bytes;
-      try {
-        bytes = loadClassData(path);
-
-        return 
-            (Class<? extends HttpController>) 
+      Class ret = null;
+      
+      do {
+        byte[] bytes;
+        try {
+          bytes = loadClassData(path);
+  
+          ret = (Class<? extends HttpController>) 
               defineClass(
                   path.split("/../")[1].replace('/', '.').replace(".class", ""),
                   bytes, 0, bytes.length);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      } while(ret == null);
       
-      return null;
+      return ret;
     }
 
     private byte[] loadClassData(String classPath) throws IOException {
@@ -203,6 +206,7 @@ public class HotReload extends ClassLoader implements Runnable {
           e.printStackTrace();
         }
       }
+      
       return null;
     }
   }

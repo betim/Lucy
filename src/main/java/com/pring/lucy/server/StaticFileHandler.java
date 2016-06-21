@@ -62,11 +62,11 @@ public class StaticFileHandler extends SimpleChannelInboundHandler<FullHttpReque
       return;
     }
     
-    sendFile(ctx, Server.staticFileLocation + Http.sanitizeFileUri(request.getUri()), request, false);
+    sendFile(ctx, Server.staticFileLocation + Http.sanitizeFileUri(request.getUri()), request, false, null);
   }
   
   protected static void sendFile(ChannelHandlerContext ctx, String path,
-      FullHttpRequest request, boolean transfer) throws Exception {
+      FullHttpRequest request, boolean transfer, String sendName) throws Exception {
     File file = new File(path);
     
     if (file.isHidden() || file.exists() || file.isFile()) {
@@ -101,7 +101,7 @@ public class StaticFileHandler extends SimpleChannelInboundHandler<FullHttpReque
       if (transfer) {
         response.headers().add("Content-Description", "File Transfer");
         response.headers().add(HeaderNames.CONTENT_TYPE, "application/octet-stream");
-        response.headers().add("Content-Disposition", "attachment; filename=" + path);
+        response.headers().add("Content-Disposition", "attachment; filename=" + sendName != null ? sendName : path);
         response.headers().add(HeaderNames.CONTENT_TRANSFER_ENCODING, "binary");
       }
       
