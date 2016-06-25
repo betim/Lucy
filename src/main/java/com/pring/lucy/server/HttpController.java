@@ -67,15 +67,14 @@ public abstract class HttpController {
   
   private String template = "";
   
-  public void fire(ChannelHandlerContext _ctx, FullHttpRequest _request,
+  public void fire(ChannelHandlerContext c, FullHttpRequest r,
       String pkg, String method, String[] params, int tokOffset) throws Exception {
-    ctx = _ctx;
-    request = _request;
+    ctx = c;
+    request = r;
     isKeepAlive = HttpHeaders.isKeepAlive(request);
 
-    if (HttpHeaders.is100ContinueExpected(request)) {
+    if (HttpHeaders.is100ContinueExpected(request))
       ctx.write(new DefaultFullHttpResponse(HTTP_1_1, HttpStatus.CONTINUE));
-    }
 
     response.headers().add(HeaderNames.CONTENT_TYPE, MimeType.defaultContentType);
 
@@ -145,7 +144,7 @@ public abstract class HttpController {
       }
       
       if (_method.getAnnotation(Status.class) != null) {
-        status(HttpResponseStatus.valueOf(_method.getAnnotation(Status.class).value()));
+        response.setStatus(HttpResponseStatus.valueOf(_method.getAnnotation(Status.class).value()));
       }  
 
       Object[] parameters = new Object[params.length - tokOffset];
@@ -219,8 +218,8 @@ public abstract class HttpController {
     redirect = to;
   }
   
-  public void status(HttpResponseStatus status) {
-    response.setStatus(status);
+  public void status(int code) {
+    response.setStatus(HttpResponseStatus.valueOf(code));
   }
 
   public String method() {
@@ -245,7 +244,7 @@ public abstract class HttpController {
     
     return "";
   }
-  
+
   public void header(String key, int value) {
     response.headers().add(key, value);
   }
@@ -290,8 +289,6 @@ public abstract class HttpController {
   }
   
   public void cookie(String key, String value, long ttl, boolean sec) {
-    System.err.println(key + " " + ttl);
-    
     Cookie cookie = new DefaultCookie(key, value);
     cookie.setMaxAge(ttl);
     cookie.setPath("/");
@@ -385,7 +382,7 @@ public abstract class HttpController {
   public String sessionId() {
     return sessionId;
   }
-  
+
   public void sessionDestroy() {
     session.destroy();
   }
@@ -397,7 +394,7 @@ public abstract class HttpController {
   public void echo(int b) {
     buffer.append(b);
   }
-  
+
   public void echo(long b) {
     buffer.append(b);
   }
@@ -417,7 +414,7 @@ public abstract class HttpController {
   public void echo(Object b) {
     buffer.append(b);
   }
-  
+
   public void debug(String... b) {
     System.out.println(Arrays.asList(b));
   }
@@ -429,15 +426,15 @@ public abstract class HttpController {
   public File file(String fileName) {
     return files.getOrDefault(fileName, Server.DUMMY_FILE);
   }
-  
+
   public Map<String, File> files() {
     return files;
   }
-  
+
   public void sendFile(String filePath) throws Exception {
     StaticFileHandler.sendFile(ctx, filePath, request, true, null);
   }
-  
+
   public void sendFile(String filePath, String fileName) throws Exception {
     StaticFileHandler.sendFile(ctx, filePath, request, true, fileName);
   }
@@ -449,23 +446,23 @@ public abstract class HttpController {
   public String clientIp() {
     return ctx.channel().remoteAddress().toString();
   }
-  
+
   public int port() {
     return Server.port;
   }
-  
+
   public String requestMethod() {
     return request.getMethod().name();
   }
-  
+
   public String url() {
     return request.getUri();
   }
-  
+
   public String userAgent() {
     return "";
   }
-  
+
   public boolean isKeepAlive() {
     return isKeepAlive;
   }
@@ -473,15 +470,15 @@ public abstract class HttpController {
   public void template(String name) {
     template = name;
   }
-  
+
   public void redirectWithTemplate(String to, String template) {
     template(template);
     redirect(to);
   }
-  
+
   public boolean hasAccess() {
     return true;
   }
-  
+
   public abstract void index() throws Exception;
 }

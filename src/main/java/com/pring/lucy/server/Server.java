@@ -76,8 +76,7 @@ public class Server {
   protected static Map<String, Class<? extends HttpController>> controllers = 
       new ConcurrentHashMap<>();
   
-  protected static Map<String, Method> methods = 
-      new ConcurrentHashMap<>();
+  protected static Map<String, Method> methods = new ConcurrentHashMap<>();
   
   public Server port(int p) {
     port = p;
@@ -151,19 +150,16 @@ public class Server {
   
   public Server maxChunkSizeInBytes(int maxChunkSizeBytes) {
     maxChunkSizeInBytes = maxChunkSizeBytes;
-    
     return this;
   }
   
   public Server epoll() {
     epoll = true;
-    
     return this;
   }
   
   public Server sync() {
     join = true;
-    
     return this;
   }
   
@@ -217,15 +213,14 @@ public class Server {
           catch (Exception e) { }
           
           long now = System.currentTimeMillis();
-          for (Session s : Session.sessionList.values())
-            if (now > s.lastUse() + sessionAgeMillis) {
-              Session.sessionList.remove(s.sessionId);
-            }
+          
+          Session.sessionList.values().stream()
+            .filter(s -> now > s.lastUse() + sessionAgeMillis)
+            .forEach(s -> Session.sessionList.remove(s.sessionId));
         }
       }).start();
     }
   }
-
   private static void extractJar(String jar, String location) {
     try {
       BufferedOutputStream dest = null;

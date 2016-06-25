@@ -91,7 +91,7 @@ You also have to create a root.view package and a matching template there. So if
 - ``staticLocation("absolute path")`` <BR> Sets the location of static files.
 - ``port(8080)`` <BR> Sets the port where to listen.
 - ``epoll()`` <BR> Enables native Linux epoll.
-- ``sync()`` <BR> Joins main thread (in case you don't have anything else ``serve()``.
+- ``sync()`` <BR> Joins the main thread and blocks. Omit this if you have anything else after.
 - ``serve()`` <BR> Kicks off everything.
 
 ## Features
@@ -107,7 +107,7 @@ Method | Function
 ------------ | -------------
 `redirect(to)` | Redirects to specified URL
 `redirectWithTemplate(to, templateName)` | Redirects to specified URL and sets a desired template
-`status(code)` | Sets HTTP status code
+`status(code)` | Sets HTTP status code, overrides `@Status` annotation
 `method()` | Returns request HTTP method
 `halt()` | Halts execution
 `halt(status)` | Halts execution with status code
@@ -148,6 +148,8 @@ Method | Function
 `url()` | Gets request URL
 `userAgent()` | Does not work
 `isKeepAlive()` | Gets connection type
+`SqlDB.query("QRY")` | Returns a one row `CachedRowSet`. Use this if you're not going to loop through results
+`SqlDB.query("QRY", args)` | Returns a one row `CachedRowSet`. Use this if you're not going to loop through results
 `SqlDB.selectCell("QRY")` | Returns one row with one cell
 `SqlDB.selectCell("QRY", args[])` | Returns one row with one cell
 `SqlDB.select("QRY")` | Returns an Iterable<ResultSet> so you can loop through it
@@ -241,7 +243,7 @@ http://localhost:8080/seller:index/update/1/Awesome
 Arguments are typesafe, so if you try to pass a `String` where `int` is expected, you'll get an exception if you're under development mode, otherwise it will politely redirect you to `/`.
 
 ## Template Engine
-Template engine is pure Java code plus for a short hand when writing for loops:
+Template engine is pure Java code plus for a short hand when writing `for` loops:
 ```html
 <ul>
 {{
@@ -287,6 +289,7 @@ I'm  {{
 - [ ] MQTT
 - [x] Some Optimizations
 - [x] Writing code on Xtend
+- [ ] JWT
 
 ## Download
 https://github.com/betim/Lucy/releases/tag/1.1
@@ -294,8 +297,8 @@ https://github.com/betim/Lucy/releases/tag/1.1
 ## Dependencies
 - Netty 4.0.37.Final
 - commons-lang3 3.4
-- HikariCP 2.4.1
-- slf4j-api 1.7.12
+- HikariCP 2.4.6
+- slf4j-api 1.7.21
 - mysql-connector-java 5.1.36
 
 --------------------------------------------------------
