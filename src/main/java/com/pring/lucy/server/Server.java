@@ -13,6 +13,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -61,7 +69,10 @@ public class Server {
   protected static boolean join = false;
   
   protected static boolean database = false;
-  HikariConfig config;
+  private static HikariConfig config;
+  
+  protected static boolean mqtt = false;
+  protected static MqttClient mqttClient;
   
   protected static String projectLocation = "";
   protected static boolean inJar = false;
@@ -162,6 +173,50 @@ public class Server {
     join = true;
     return this;
   }
+
+  public Server mqtt(String broker, MqttCallbackListener listener, String topic) {
+    mqtt = true;
+
+    new Thread(() -> {
+      Thread.currentThread().setName("MQTT");
+      MemoryPersistence persistence = new MemoryPersistence();
+
+      try {
+        mqttClient = new MqttClient(broker, String.valueOf(System.currentTimeMillis()), persistence);
+        MqttConnectOptions connOpts = new MqttConnectOptions();
+        connOpts.setCleanSession(true);
+        System.out.println("Connecting to broker: " + broker);
+        mqttClient.connect(connOpts);
+        System.out.println("Connected to broker: " + broker);
+        
+        if (listener != null) {
+          mqttClient.subscribe(topic);
+          
+          mqttClient.setCallback(new MqttCallback() {
+            @Override
+            public void messageArrived(String topic, MqttMessage msg) throws Exception {
+              listener.handleMessage(topic, msg.toString());
+            }
+            
+            @Override
+            public void deliveryComplete(IMqttDeliveryToken token) { }
+
+            @Override
+            public void connectionLost(Throwable cause) { }
+          });
+        }
+      } catch (MqttException me) {
+        System.out.println("reason " + me.getReasonCode());
+        System.out.println("msg " + me.getMessage());
+        System.out.println("loc " + me.getLocalizedMessage());
+        System.out.println("cause " + me.getCause());
+        System.out.println("excep " + me);
+        me.printStackTrace();
+      }
+    }).start();
+
+    return this;
+  }
   
   private static final int BUFFER = 2048;
 
@@ -221,6 +276,7 @@ public class Server {
       }).start();
     }
   }
+  
   private static void extractJar(String jar, String location) {
     try {
       BufferedOutputStream dest = null;
@@ -331,6 +387,9 @@ public class Server {
       } finally {
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
+        
+        try { mqttClient.disconnect(); }
+        catch (Exception e) { e.printStackTrace(); }
       }
     }).start();
   }

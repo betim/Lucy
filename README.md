@@ -71,16 +71,17 @@ Create a ``root.view`` ``package`` and a matching ``html`` template in it if you
 ```java
 ...
     new Main()
-      // 1. withoutCookies()
-      // 2. sessionAge(60)
-      // 3. gzip()
-      // 4. database("jdbc:mysql://localhost:3306/information_schema", "root", "root")
-      // 5. production()
-      // 6. staticLocation("/var/www")
-      // 7. port(8080)
-      // 8. epoll()
-      // 9. sync()
-      // #. serve();
+      //  1. withoutCookies()
+      //  2. sessionAge(60)
+      //  3. gzip()
+      //  4. database("jdbc:mysql://localhost:3306/information_schema", "root", "root")
+      //  5. production()
+      //  6. staticLocation("/var/www")
+      //  7. port(8080)
+      //  8. epoll()
+      //  9. sync()
+      // 10. .mqtt(broker, listener, topic)
+      // 11. serve();
 ...
 ```
 - ``withoutCookies()`` <BR> Will not set any cookies at all. In case you have a static website.
@@ -92,6 +93,7 @@ Create a ``root.view`` ``package`` and a matching ``html`` template in it if you
 - ``port(8080)`` <BR> Sets the port where to listen.
 - ``epoll()`` <BR> Enables native Linux epoll.
 - ``sync()`` <BR> Joins the main thread and blocks. Omit this if you have anything else after.
+- ``mqtt(broker, listener, topic)`` <BR> Connects to a specified `broker` and handles incoming messages through a `MqttCallbackListener` coming to subscribed `topic`. Use `#` as a wild card.
 - ``serve()`` <BR> Kicks off everything.
 
 ## Features
@@ -286,7 +288,7 @@ I'm  {{
 - [x] Maven
 - [ ] WebSockets
 - [ ] Spdy
-- [ ] MQTT
+- [x] MQTT
 - [x] Some Optimizations
 - [x] Writing code on Xtend
 - [ ] JWT
@@ -300,6 +302,7 @@ https://github.com/betim/Lucy/releases/tag/1.1
 - HikariCP 2.4.6
 - slf4j-api 1.7.21
 - mysql-connector-java 5.1.36
+- org.eclipse.paho 1.0.2
 
 --------------------------------------------------------
 

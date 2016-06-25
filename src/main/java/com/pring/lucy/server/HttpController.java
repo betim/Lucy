@@ -13,6 +13,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
+
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -89,7 +94,7 @@ public abstract class HttpController {
     }
     
     Method _method = Server.methods.get(pkg + '.' + method);
-    if (_method != null) {      
+    if (_method != null) {
       if (Server.withCookies && _method.getAnnotation(NoSession.class) == null) {
         cookie(Server.sessionName, sessionId, Server.sessionAge);
         
@@ -480,5 +485,13 @@ public abstract class HttpController {
     return true;
   }
 
+  public void publish(String topic, String message, int qos) throws Exception {
+    if (Server.mqtt) {
+      MqttMessage _m = new MqttMessage(message.getBytes());
+      _m.setQos(qos);
+      Server.mqttClient.publish(topic, _m);
+    }
+  }
+  
   public abstract void index() throws Exception;
 }
