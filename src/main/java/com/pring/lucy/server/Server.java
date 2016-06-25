@@ -37,15 +37,13 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
 import io.netty.handler.codec.http.multipart.DiskAttribute;
 import io.netty.handler.codec.http.multipart.DiskFileUpload;
 import io.netty.handler.codec.http.multipart.HttpDataFactory;
-import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 
 public class Server {
   static {
@@ -74,6 +72,11 @@ public class Server {
   protected static boolean mqtt = false;
   protected static MqttClient mqttClient;
   
+  protected static boolean webSocket = false;
+  protected static String webSocketPath = "";
+  protected static Class<? extends HttpController> webSocketHandlerClass;
+  protected static Method webSocketHandler;
+  
   protected static String projectLocation = "";
   protected static boolean inJar = false;
   
@@ -84,9 +87,9 @@ public class Server {
   
   protected static HikariDataSource ds = new HikariDataSource();
   
-  protected static Map<String, Class<? extends HttpController>> controllers = 
-      new ConcurrentHashMap<>();
-  
+  protected static Map<String, Class<? extends HttpController>>
+    controllers = new ConcurrentHashMap<>();
+
   protected static Map<String, Method> methods = new ConcurrentHashMap<>();
   
   public Server port(int p) {
@@ -182,16 +185,18 @@ public class Server {
       MemoryPersistence persistence = new MemoryPersistence();
 
       try {
-        mqttClient = new MqttClient(broker, String.valueOf(System.currentTimeMillis()), persistence);
+        mqttClient = new MqttClient(broker, 
+            "Lucy-" + String.valueOf(System.currentTimeMillis()), persistence);
+        
         MqttConnectOptions connOpts = new MqttConnectOptions();
         connOpts.setCleanSession(true);
+        
         System.out.println("Connecting to broker: " + broker);
         mqttClient.connect(connOpts);
         System.out.println("Connected to broker: " + broker);
         
         if (listener != null) {
           mqttClient.subscribe(topic);
-          
           mqttClient.setCallback(new MqttCallback() {
             @Override
             public void messageArrived(String topic, MqttMessage msg) throws Exception {
@@ -206,11 +211,7 @@ public class Server {
           });
         }
       } catch (MqttException me) {
-        System.out.println("reason " + me.getReasonCode());
-        System.out.println("msg " + me.getMessage());
-        System.out.println("loc " + me.getLocalizedMessage());
-        System.out.println("cause " + me.getCause());
-        System.out.println("excep " + me);
+        System.err.println("Reason " + me.getReasonCode() + " msg " + me.getMessage());
         me.printStackTrace();
       }
     }).start();
@@ -218,8 +219,15 @@ public class Server {
     return this;
   }
   
-  private static final int BUFFER = 2048;
+  public Server webSocket(String webSocketPathEndPoint) {
+    webSocket = true;
+    webSocketPath = webSocketPathEndPoint;
 
+    return this;
+  }
+  
+  private static final int BUFFER = 2048;
+  
   public void init() throws URISyntaxException {
     inJar = Server.class.getResource("Server.class").toString().startsWith("jar");
 
@@ -360,18 +368,16 @@ public class Server {
           .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
           .childHandler(new ChannelInitializer<SocketChannel>() {
             @Override
-            public void initChannel(SocketChannel ch) {
+            public void initChannel(final SocketChannel ch) {
               ch.pipeline().addLast(new HttpServerCodec());
-              ch.pipeline().addLast(new HttpRequestDecoder(65536, 65536, maxChunkSizeInBytes, false));
               ch.pipeline().addLast(new HttpObjectAggregator(65536));
-              ch.pipeline().addLast(new ChunkedWriteHandler());
               
-              if (compress)
-                ch.pipeline().addLast("deflater", new HttpContentCompressor(1));
+              ch.pipeline().addLast(new WebSocketServerProtocolHandler(webSocketPath, null, true));
+              ch.pipeline().addLast(new WebSocketFrameHandler());
               
               ch.pipeline().addLast(new Handler());
               ch.pipeline().addLast(new StaticFileHandler());
-            }   
+            } 
           });
         
         Channel ch = b.bind(port).sync().channel();

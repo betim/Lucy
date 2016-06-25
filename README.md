@@ -80,7 +80,7 @@ Create a ``root.view`` ``package`` and a matching ``html`` template in it if you
       //  7. port(8080)
       //  8. epoll()
       //  9. sync()
-      // 10. .mqtt(broker, listener, topic)
+      // 10. mqtt(broker, listener, topic)
       // 11. serve();
 ...
 ```
@@ -93,7 +93,7 @@ Create a ``root.view`` ``package`` and a matching ``html`` template in it if you
 - ``port(8080)`` <BR> Sets the port where to listen.
 - ``epoll()`` <BR> Enables native Linux epoll.
 - ``sync()`` <BR> Joins the main thread and blocks. Omit this if you have anything else after.
-- ``mqtt(broker, listener, topic)`` <BR> Connects to a specified `broker` and handles incoming messages through a `MqttCallbackListener` coming to subscribed `topic`. Use `#` as a wild card.
+- ``mqtt(broker, listener, topic)`` <BR> Connects to a specified `broker` and handles incoming messages through a `MqttCallbackListener` coming to subscribed `topic`. Use `#` as a wild card. `publish(topic, message)` will publish your messages from any controller.
 - ``serve()`` <BR> Kicks off everything.
 
 ## Features
@@ -286,11 +286,11 @@ I'm  {{
 ```
 ## Roadmap
 - [x] Maven
-- [ ] WebSockets
+- [x] WebSockets
 - [ ] Spdy
 - [x] MQTT
 - [x] Some Optimizations
-- [x] Writing code on Xtend
+- [x] Writing code with Xtend
 - [ ] JWT
 
 ## Download

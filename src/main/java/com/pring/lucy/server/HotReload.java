@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.pring.lucy.annotations.WebSocket;
 import com.pring.lucy.template.TemplateEngine;
 
 public class HotReload extends ClassLoader implements Runnable {
@@ -80,6 +81,11 @@ public class HotReload extends ClassLoader implements Runnable {
         
         for (Method m : cls.getDeclaredMethods()) {
           Server.methods.put(clsPkg + '.' + m.getName(), m);
+          
+          if (m.getAnnotation(WebSocket.class) != null) {
+            Server.webSocketHandler = m;
+            Server.webSocketHandlerClass = cls;
+          }
         }
         // System.out.printf("Loaded controller: %s\n", f.getName());
       }
@@ -141,6 +147,11 @@ public class HotReload extends ClassLoader implements Runnable {
                         
                         for (Method m : cls.getMethods()) {
                           Server.methods.put(clsPkg + '.' + m.getName(), m);
+                          
+                          if (m.getAnnotation(WebSocket.class) != null) {
+                            Server.webSocketHandler = m;
+                            Server.webSocketHandlerClass = cls;
+                          }
                         }
                       }
                     }
@@ -173,6 +184,7 @@ public class HotReload extends ClassLoader implements Runnable {
     public Class<? extends HttpController> findClass(String path) {
       Class ret = null;
       
+      int i = 0;
       do {
         byte[] bytes;
         try {
@@ -184,8 +196,9 @@ public class HotReload extends ClassLoader implements Runnable {
                   bytes, 0, bytes.length);
         } catch (Exception e) {
           e.printStackTrace();
+          continue;
         }
-      } while(ret == null);
+      } while(ret == null && i++ < 3);
       
       return ret;
     }

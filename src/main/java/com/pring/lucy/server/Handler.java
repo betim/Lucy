@@ -5,24 +5,38 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import io.netty.handler.stream.ChunkedWriteHandler;
 
 public class Handler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
     ctx.flush();
   }
-  
+    
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     if (msg instanceof HttpRequest) {
+      ctx.channel().pipeline().addLast(new HttpRequestDecoder(65536, 65536, Server.maxChunkSizeInBytes, false));
+      ctx.channel().pipeline().addLast(new ChunkedWriteHandler());
+      
+       if (Server.compress)
+         ctx.channel().pipeline().addLast(new HttpContentCompressor(1));
+      
+       
       FullHttpRequest request = (FullHttpRequest) msg;
 
       if (!request.getDecoderResult().isSuccess()) {
@@ -57,8 +71,9 @@ public class Handler extends ChannelInboundHandlerAdapter {
       if (controller != null) {
         controller.getConstructor().newInstance()
           .fire(ctx, request, pkg, method, tokens, tokCnt);
-      } else
+      } else {
         ctx.fireChannelRead(msg);
+      }
     }
   }
 
@@ -67,7 +82,7 @@ public class Handler extends ChannelInboundHandlerAdapter {
     if (cause instanceof HaltException)
       Http.sendException(ctx, HttpResponseStatus.valueOf(((HaltException) cause).status), cause.getMessage());
     else {
-      if (true || Server.developmentMode) {
+      if (Server.developmentMode) {
         if (StringUtils.contains(cause.getMessage(), "cannot find symbol")) {
           String ex[] = cause.getMessage().split("\n");
           

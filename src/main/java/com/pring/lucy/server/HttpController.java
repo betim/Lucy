@@ -485,7 +485,7 @@ public abstract class HttpController {
     return true;
   }
 
-  public void publish(String topic, String message, int qos) throws Exception {
+  public static void publish(String topic, String message, int qos) throws Exception {
     if (Server.mqtt) {
       MqttMessage _m = new MqttMessage(message.getBytes());
       _m.setQos(qos);
