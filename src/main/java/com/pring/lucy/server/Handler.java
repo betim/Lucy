@@ -5,38 +5,25 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Locale;
+import java.util.Arrays;
 
 import org.apache.commons.lang3.StringUtils;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.WebSocketFrame;
-import io.netty.handler.stream.ChunkedWriteHandler;
 
 public class Handler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
     ctx.flush();
   }
-    
+
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     if (msg instanceof HttpRequest) {
-      ctx.channel().pipeline().addLast(new HttpRequestDecoder(65536, 65536, Server.maxChunkSizeInBytes, false));
-      ctx.channel().pipeline().addLast(new ChunkedWriteHandler());
-      
-       if (Server.compress)
-         ctx.channel().pipeline().addLast(new HttpContentCompressor(1));
-      
-       
       FullHttpRequest request = (FullHttpRequest) msg;
 
       if (!request.getDecoderResult().isSuccess()) {
@@ -45,9 +32,11 @@ public class Handler extends ChannelInboundHandlerAdapter {
       }
       
       String tokens[] = Http.sanitizeUri(request.getUri()).split("/");
-      int tokCnt = 0;
-
+      
       String pkg = "root.controller.index";
+      String method = "index";
+      int offset = 0;
+      
       if (tokens.length > 1) {
         String __r[] = tokens[1].split(":");
         
@@ -58,19 +47,18 @@ public class Handler extends ChannelInboundHandlerAdapter {
         else
           pkg = "root.controller." + __r[0];
         
-        tokCnt = 2;
+        offset = 2;
       }
 
-      String method = "index";
       if (tokens.length >= 3) {
         method = tokens[2];
-        tokCnt++;
+        offset++;
       }
 
       Class<? extends HttpController> controller = Server.controllers.get(pkg);
       if (controller != null) {
         controller.getConstructor().newInstance()
-          .fire(ctx, request, pkg, method, tokens, tokCnt);
+          .fire(ctx, request, pkg, method, tokens, offset);
       } else {
         ctx.fireChannelRead(msg);
       }

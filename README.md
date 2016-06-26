@@ -10,7 +10,7 @@ A micro HTTP framework based on Netty for Java.
 <dependency>
   <groupId>com.pr-ing</groupId>
   <artifactId>lucy</artifactId>
-  <version>1.0</version>
+  <version>$VERSION</version>
 </dependency>
 ```
 
@@ -62,7 +62,7 @@ http://localhost:8080/root:index/index
                       |    class name
                       package name
 ```
-Create a ``root.view`` ``package`` and a matching ``html`` template in it if you want templating. So if you have ``Index.java`` you must have ``index.html`` (lowercase) in root.view.
+Create a ``root.view`` ``package`` and a matching ``html`` template in it if you want templating. So if you have ``Index.java`` you must have ``index.html`` (lowercase) in `root.view`.
 
 ```
 / -> binds to root.*
@@ -92,7 +92,7 @@ Create a ``root.view`` ``package`` and a matching ``html`` template in it if you
 - ``staticLocation("absolute path")`` <BR> Sets the location of static files.
 - ``port(8080)`` <BR> Sets the port where to listen.
 - ``epoll()`` <BR> Enables native Linux epoll.
-- ``sync()`` <BR> Joins the main thread and blocks. Omit this if you have anything else after.
+- ``sync()`` <BR> Joins the main thread and blocks. Omit this if you have anything else after (which of course blocks main thread).
 - ``mqtt(broker, listener, topic)`` <BR> Connects to a specified `broker` and handles incoming messages through a `MqttCallbackListener` coming to subscribed `topic`. Use `#` as a wild card. `publish(topic, message)` will publish your messages from any controller.
 - ``serve()`` <BR> Kicks off everything.
 
@@ -159,6 +159,7 @@ Method | Function
 `SqlDB.insert("QRY", args)` | Returns mysql-last-id
 `SqlDB.update("QRY", args)` | Returns manipulated row nums
 `SqlDB.delete("QRY", args)` | Returns manipulated row nums (Alias to `.update`)
+`publish(topic, message` | If mqtt is called on `Main` then this will publish a message to a desired topic.
 
 ## Method Annotations
 Annotation | Function
@@ -170,6 +171,7 @@ Annotation | Function
 `@View("index1")` | Sets custom view
 `@View("")` | Removes templating
 `@NoAccess` | Does not check `hasAccess()` which returns boolean, for e.x: isLoggedIn
+`@WebSocket` | Marks method as WebSocket handler.
 
 ## Examples
 Say you have an API with buyer and seller. You can have the code separately like this:
@@ -287,7 +289,7 @@ I'm  {{
 ## Roadmap
 - [x] Maven
 - [x] WebSockets
-- [ ] Spdy
+~~- [ ] Spdy~~
 - [x] MQTT
 - [x] Some Optimizations
 - [x] Writing code with Xtend

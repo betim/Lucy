@@ -11,15 +11,10 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
     // ping and pong frames already handled
 
     if (frame instanceof TextWebSocketFrame) {
-      // Send the uppercase string back.
       String request = ((TextWebSocketFrame) frame).text();
 
-      try {
-        ctx.channel().writeAndFlush(new TextWebSocketFrame(
-            String.valueOf(Server.webSocketHandler.invoke(Server.webSocketHandlerClass.getConstructor().newInstance(), request))));
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+      ctx.channel().writeAndFlush(new TextWebSocketFrame(
+          String.valueOf(Server.webSocketHandler.invoke(Server.webSocketHandlerClass.getConstructor().newInstance(), request))));
     } else {
       String message = "unsupported frame type: " + frame.getClass().getName();
       throw new UnsupportedOperationException(message);

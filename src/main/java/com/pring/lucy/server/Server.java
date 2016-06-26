@@ -37,13 +37,16 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.HttpRequestDecoder;
+import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
 import io.netty.handler.codec.http.multipart.DiskAttribute;
 import io.netty.handler.codec.http.multipart.DiskFileUpload;
 import io.netty.handler.codec.http.multipart.HttpDataFactory;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
 
 public class Server {
   static {
@@ -191,7 +194,7 @@ public class Server {
         MqttConnectOptions connOpts = new MqttConnectOptions();
         connOpts.setCleanSession(true);
         
-        System.out.println("Connecting to broker: " + broker);
+        // System.out.println("Connecting to broker: " + broker);
         mqttClient.connect(connOpts);
         System.out.println("Connected to broker: " + broker);
         
@@ -369,11 +372,18 @@ public class Server {
           .childHandler(new ChannelInitializer<SocketChannel>() {
             @Override
             public void initChannel(final SocketChannel ch) {
-              ch.pipeline().addLast(new HttpServerCodec());
+              ch.pipeline().addLast(new HttpRequestDecoder(65536, 65536, maxChunkSizeInBytes, false));
+              ch.pipeline().addLast(new HttpResponseEncoder());
               ch.pipeline().addLast(new HttpObjectAggregator(65536));
               
-              ch.pipeline().addLast(new WebSocketServerProtocolHandler(webSocketPath, null, true));
-              ch.pipeline().addLast(new WebSocketFrameHandler());
+              if (webSocket) {
+                ch.pipeline().addLast(new WebSocketServerProtocolHandler(webSocketPath, null, true));
+                ch.pipeline().addLast(new WebSocketFrameHandler());
+              }
+              
+              ch.pipeline().addLast(new ChunkedWriteHandler());
+              if (Server.compress)
+                ch.pipeline().channel().pipeline().addLast(new HttpContentCompressor(1));
               
               ch.pipeline().addLast(new Handler());
               ch.pipeline().addLast(new StaticFileHandler());

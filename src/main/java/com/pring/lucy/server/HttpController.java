@@ -13,13 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
-
 import java.util.Set;
 import java.util.TreeSet;
+
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import com.pring.lucy.annotations.Api;
 import com.pring.lucy.annotations.NoAccess;

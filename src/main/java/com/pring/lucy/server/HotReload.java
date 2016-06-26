@@ -81,13 +81,22 @@ public class HotReload extends ClassLoader implements Runnable {
         
         for (Method m : cls.getDeclaredMethods()) {
           Server.methods.put(clsPkg + '.' + m.getName(), m);
+          String[] pkgTok = clsPkg.split("\\.");
           
           if (m.getAnnotation(WebSocket.class) != null) {
+            Server.webSocket = true;
+            
+            Server.webSocketPath = ("/:" + pkgTok[2] + "/" + m.getName());
             Server.webSocketHandler = m;
             Server.webSocketHandlerClass = cls;
+            
+            System.out.println("   * Websocket: " + "/:" + pkgTok[2] + "/" 
+                + m.getName() + " mapped on: " + clsPkg + '.' + m.getName());
+          } else {
+            System.out.println("   * HttpController: " + "/" + pkgTok[0] + ":" 
+                + pkgTok[2] + "/" + m.getName() + " mapped on: " + clsPkg + '.' + m.getName());
           }
         }
-        // System.out.printf("Loaded controller: %s\n", f.getName());
       }
     } else if (f.getName().endsWith(".html")) {
       // System.out.printf("Loaded template: %s\n", f.getName());
@@ -145,10 +154,15 @@ public class HotReload extends ClassLoader implements Runnable {
                         
                         Server.controllers.put(clsPkg, cls);
                         
-                        for (Method m : cls.getMethods()) {
+                        for (Method m : cls.getDeclaredMethods()) {
                           Server.methods.put(clsPkg + '.' + m.getName(), m);
                           
                           if (m.getAnnotation(WebSocket.class) != null) {
+                            Server.webSocket = true;
+                            
+                            String[] pkgTok = clsPkg.split("\\.");
+                            
+                            Server.webSocketPath = ("/:" + pkgTok[2] + "/" + m.getName());
                             Server.webSocketHandler = m;
                             Server.webSocketHandlerClass = cls;
                           }
