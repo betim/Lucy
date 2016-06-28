@@ -164,8 +164,8 @@ Method | Function
 ## Method Annotations
 Annotation | Function
 ------------ | -------------
-`@Api` | Marks method as an API method and ignores templating
-`@Api("text/plain")` | Marks method as API and sets Content-Type and ignores templating
+`@API` | Marks method as an API method and ignores templating
+`@API("text/plain")` | Marks method as API and sets Content-Type and ignores templating
 `@NoSession` | Does not bother with session stuff
 `@Status(200)` | Sets HTTP response code
 `@View("index1")` | Sets custom view
@@ -217,14 +217,14 @@ import org.pring.lucy.server.HttpController;
 
 public class Index extends HttpController {
   @Override
-  @Api
+  @API
   public void index() throws Exception {
     for (ResultSet r : SqlDB.select("select * from `sellers`;")) {
       echo(r.getString("id") + " => " + r.getString("name") + '\n');
     }
   }
 
-  @Api
+  @API
   public void update(int id, String name) {
     SqlDB.update("UPDATE `sellers` SET `name` = ? WHERE `id` = ?", new Object[] { name, id });
     redirect("/");
@@ -289,11 +289,10 @@ I'm  {{
 ## Roadmap
 - [x] Maven
 - [x] WebSockets
-~~- [ ] Spdy~~
+- [ ] ~~Spdy~~
 - [x] MQTT
 - [x] Some Optimizations
 - [x] Writing code with Xtend
-- [ ] JWT
 
 ## Download
 https://github.com/betim/Lucy/releases/tag/1.1

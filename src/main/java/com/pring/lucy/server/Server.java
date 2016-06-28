@@ -8,8 +8,10 @@ import java.lang.ProcessBuilder.Redirect;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -27,6 +29,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -76,6 +79,7 @@ public class Server {
   protected static MqttClient mqttClient;
   
   protected static boolean webSocket = false;
+  protected static List<ChannelHandlerContext> webSocketChannels = new ArrayList<>();
   protected static String webSocketPath = "";
   protected static Class<? extends HttpController> webSocketHandlerClass;
   protected static Method webSocketHandler;
@@ -90,10 +94,8 @@ public class Server {
   
   protected static HikariDataSource ds = new HikariDataSource();
   
-  protected static Map<String, Class<? extends HttpController>>
-    controllers = new ConcurrentHashMap<>();
-
-  protected static Map<String, Method> methods = new ConcurrentHashMap<>();
+  protected static Map<String, Class<? extends Controller>> controllers = new HashMap<>();
+  protected static Map<String, Method> methods = new HashMap<>();
   
   public Server port(int p) {
     port = p;
@@ -221,16 +223,10 @@ public class Server {
 
     return this;
   }
-  
-  public Server webSocket(String webSocketPathEndPoint) {
-    webSocket = true;
-    webSocketPath = webSocketPathEndPoint;
 
-    return this;
-  }
+  
   
   private static final int BUFFER = 2048;
-  
   public void init() throws URISyntaxException {
     inJar = Server.class.getResource("Server.class").toString().startsWith("jar");
 
@@ -287,7 +283,6 @@ public class Server {
       }).start();
     }
   }
-  
   private static void extractJar(String jar, String location) {
     try {
       BufferedOutputStream dest = null;
@@ -322,11 +317,9 @@ public class Server {
       e.printStackTrace();
     }
   }
-  
   public static String getProjectLocation() {
     return projectLocation;
   }
-  
   public static boolean isDevelopmentMode() {
     return developmentMode;
   }
@@ -377,6 +370,8 @@ public class Server {
               ch.pipeline().addLast(new HttpObjectAggregator(65536));
               
               if (webSocket) {
+                // ch.pipeline().addLast();
+
                 ch.pipeline().addLast(new WebSocketServerProtocolHandler(webSocketPath, null, true));
                 ch.pipeline().addLast(new WebSocketFrameHandler());
               }

@@ -5,7 +5,6 @@ import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Arrays;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -55,7 +54,7 @@ public class Handler extends ChannelInboundHandlerAdapter {
         offset++;
       }
 
-      Class<? extends HttpController> controller = Server.controllers.get(pkg);
+      Class<? extends HttpController> controller = (Class<? extends HttpController>) Server.controllers.get(pkg);
       if (controller != null) {
         controller.getConstructor().newInstance()
           .fire(ctx, request, pkg, method, tokens, offset);

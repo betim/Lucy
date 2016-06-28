@@ -90,7 +90,7 @@ public class HotReload extends ClassLoader implements Runnable {
             Server.webSocketHandler = m;
             Server.webSocketHandlerClass = cls;
             
-            System.out.println("   * Websocket: " + "/:" + pkgTok[2] + "/" 
+            System.out.println("   * WebSocket: " + "/:" + pkgTok[2] + "/" 
                 + m.getName() + " mapped on: " + clsPkg + '.' + m.getName());
           } else {
             System.out.println("   * HttpController: " + "/" + pkgTok[0] + ":" 

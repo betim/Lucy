@@ -18,7 +18,7 @@ import java.util.TreeSet;
 
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import com.pring.lucy.annotations.Api;
+import com.pring.lucy.annotations.API;
 import com.pring.lucy.annotations.NoAccess;
 import com.pring.lucy.annotations.NoSession;
 import com.pring.lucy.annotations.Status;
@@ -44,9 +44,10 @@ import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.CharsetUtil;
 
-public abstract class HttpController {
+public abstract class HttpController extends Controller {
   private ChannelHandlerContext ctx;
   private FullHttpRequest request;
   private FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpStatus.OK);
@@ -179,8 +180,8 @@ public abstract class HttpController {
         throw halt;
       }
       
-      if (_method.getAnnotation(Api.class) != null) {
-        response.headers().set(HeaderNames.CONTENT_TYPE, _method.getAnnotation(Api.class).value());
+      if (_method.getAnnotation(API.class) != null) {
+        response.headers().set(HeaderNames.CONTENT_TYPE, _method.getAnnotation(API.class).value());
       } else if (template.length() > 0) {
         String[] elems = pkg.split("\\.");
         elems[elems.length - 1] = template;
@@ -488,6 +489,13 @@ public abstract class HttpController {
       _m.setQos(qos);
       Server.mqttClient.publish(topic, _m);
     }
+  }
+  
+  public static void webSocketSend(String message) {
+    if (Server.webSocket)
+      for (ChannelHandlerContext ctx : Server.webSocketChannels) {
+        ctx.channel().writeAndFlush(new TextWebSocketFrame(message));
+      }
   }
   
   public abstract void index() throws Exception;
