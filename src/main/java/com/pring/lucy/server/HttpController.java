@@ -491,10 +491,13 @@ public abstract class HttpController extends Controller {
     }
   }
   
-  public static void webSocketSend(String message) {
+  public static void broadcast(String message) {
     if (Server.webSocket)
       for (ChannelHandlerContext ctx : Server.webSocketChannels) {
-        ctx.channel().writeAndFlush(new TextWebSocketFrame(message));
+        if (ctx.channel().isActive())
+          ctx.channel().writeAndFlush(new TextWebSocketFrame(message));
+        else
+          Server.webSocketChannels.remove(ctx);
       }
   }
   

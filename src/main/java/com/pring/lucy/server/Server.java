@@ -30,6 +30,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -42,6 +43,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
@@ -283,6 +285,7 @@ public class Server {
       }).start();
     }
   }
+  
   private static void extractJar(String jar, String location) {
     try {
       BufferedOutputStream dest = null;
@@ -317,9 +320,11 @@ public class Server {
       e.printStackTrace();
     }
   }
+  
   public static String getProjectLocation() {
     return projectLocation;
   }
+  
   public static boolean isDevelopmentMode() {
     return developmentMode;
   }
@@ -370,9 +375,17 @@ public class Server {
               ch.pipeline().addLast(new HttpObjectAggregator(65536));
               
               if (webSocket) {
-                // ch.pipeline().addLast();
+                ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                  @Override
+                  public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                    if (((HttpRequest) msg).getUri().equals(webSocketPath))
+                      webSocketChannels.add(ctx);
 
-                ch.pipeline().addLast(new WebSocketServerProtocolHandler(webSocketPath, null, true));
+                    super.channelRead(ctx, msg);
+                  }
+                });
+
+                ch.pipeline().addLast(new WebSocketServerProtocolHandler(webSocketPath, null, true, 65536));
                 ch.pipeline().addLast(new WebSocketFrameHandler());
               }
               
