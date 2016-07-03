@@ -492,13 +492,17 @@ public abstract class HttpController extends Controller {
   }
   
   public static void broadcast(String message) {
-    if (Server.webSocket)
-      for (ChannelHandlerContext ctx : Server.webSocketChannels) {
-        if (ctx.channel().isActive())
-          ctx.channel().writeAndFlush(new TextWebSocketFrame(message));
-        else
-          Server.webSocketChannels.remove(ctx);
+    if (Server.webSocket) {
+      for (int i = 0; i < Server.webSocketChannels.size(); i++) {
+        ChannelHandlerContext ch = Server.webSocketChannels.get(i);
+        if (ch.channel().isActive())
+          ch.writeAndFlush(new TextWebSocketFrame(message));
+        else {
+          ch.channel().close();
+          Server.webSocketChannels.remove(i);
+        }
       }
+    }
   }
   
   public abstract void index() throws Exception;

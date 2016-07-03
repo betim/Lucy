@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +82,8 @@ public class Server {
   protected static MqttClient mqttClient;
   
   protected static boolean webSocket = false;
-  protected static List<ChannelHandlerContext> webSocketChannels = new ArrayList<>();
+  protected static List<ChannelHandlerContext> webSocketChannels =
+      Collections.synchronizedList(new ArrayList<>());
   protected static String webSocketPath = "";
   protected static Class<? extends HttpController> webSocketHandlerClass;
   protected static Method webSocketHandler;
