@@ -159,7 +159,7 @@ Method | Function
 `SqlDB.insert("QRY", args)` | Returns mysql-last-id
 `SqlDB.update("QRY", args)` | Returns manipulated row nums
 `SqlDB.delete("QRY", args)` | Returns manipulated row nums (Alias to `.update`)
-`publish(topic, message` | If mqtt is called on `Main` then this will publish a message to a desired topic.
+`publish(topic, message)` | If mqtt is called on `Main` then this will publish a message to a desired topic.
 `broadcast(message)` | If you have a `@WebSocket` method then this will broadcast a message to all active WebSocket channels.
 
 ## Method Annotations
@@ -169,10 +169,10 @@ Annotation | Function
 `@API("text/plain")` | Marks method as API and sets Content-Type and ignores templating
 `@NoSession` | Does not bother with session stuff
 `@Status(200)` | Sets HTTP response code
-`@View("index1")` | Sets custom view
-`@View("")` | Removes templating
-`@NoAccess` | Does not check `hasAccess()` which returns boolean, for e.x: isLoggedIn
-`@WebSocket` | Marks method as WebSocket handler.
+`@View("index1")` | Sets a custom view
+`@View("")` | Removes associated template
+`@NoAccessCheck` | Does not check `hasAccess()` which returns boolean, for e.x: isLoggedIn
+`@WebSocket` | Marks method as WebSocket handler
 
 ## Examples
 Say you have an API with buyer and seller. You can have the code separately like this:

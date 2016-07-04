@@ -19,7 +19,7 @@ import java.util.TreeSet;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import com.pring.lucy.annotations.API;
-import com.pring.lucy.annotations.NoAccess;
+import com.pring.lucy.annotations.NoAccessCheck;
 import com.pring.lucy.annotations.NoSession;
 import com.pring.lucy.annotations.Status;
 import com.pring.lucy.annotations.View;
@@ -169,9 +169,9 @@ public abstract class HttpController extends Controller {
         idx++;
       }
 
-      if (_method.getAnnotation(NoAccess.class) == null && hasAccess())
+      if (_method.getAnnotation(NoAccessCheck.class) == null && hasAccess())
         _method.invoke(this, parameters);
-      else if (_method.getAnnotation(NoAccess.class) != null)
+      else if (_method.getAnnotation(NoAccessCheck.class) != null)
         _method.invoke(this, parameters);
       else
         halt = new HaltException("No access", 401);
