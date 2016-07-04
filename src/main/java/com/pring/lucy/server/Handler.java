@@ -17,9 +17,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 public class Handler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-    if (Server.webSocketChannels.contains(ctx))
-      Server.webSocketChannels.remove(ctx);
-
     ctx.flush();
   }
 

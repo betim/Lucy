@@ -377,14 +377,20 @@ public class Server {
               ch.pipeline().addLast(new HttpObjectAggregator(65536));
               
               if (webSocket) {
-                ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                ch.pipeline().addLast("t", new ChannelInboundHandlerAdapter() {
                   @Override
                   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                     if (((HttpRequest) msg).getUri().equals(webSocketPath))
                       webSocketChannels.add(ctx);
 
                     super.channelRead(ctx, msg);
+                    ch.pipeline().remove(this);
                   }
+                  
+                  public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+                    if (webSocketChannels.contains(ctx))
+                      webSocketChannels.remove(ctx);
+                  };
                 });
 
                 ch.pipeline().addLast(new WebSocketServerProtocolHandler(webSocketPath, null, true, 65536));
