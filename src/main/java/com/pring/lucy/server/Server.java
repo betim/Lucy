@@ -408,7 +408,7 @@ public class Server {
         
         Channel ch = b.bind(port).sync().channel();
         
-        System.out.println("Ready. Navigate to http://localhost:" + port + '/');
+        System.out.println("Ready. Navigate to http://0.0.0.0:" + port + '/');
         
         if (join)
           Thread.currentThread().join();
